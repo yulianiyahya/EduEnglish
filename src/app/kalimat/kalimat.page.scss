@@ -1,0 +1,312 @@
+// ─── Wrapper ───────────────────────────────────────────────────
+.app-wrapper {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #e8f4fd 0%, #d0e8f8 100%);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+// ─── Top Banner ────────────────────────────────────────────────
+.top-bg {
+  background: linear-gradient(135deg, #2979ff, #1565c0);
+  padding: 48px 20px 28px;
+  color: white;
+  border-radius: 0 0 28px 28px;
+
+  &.detail-bg { background: linear-gradient(135deg, #00897b, #00695c); }
+  &.quiz-bg   { background: linear-gradient(135deg, #7b1fa2, #4a148c); }
+}
+
+.back-btn {
+  font-size: 14px;
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 12px;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.screen-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.screen-sub {
+  font-size: 13px;
+  opacity: 0.85;
+  margin: 0;
+}
+
+// ─── Body ──────────────────────────────────────────────────────
+.body-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &.result-body {
+    padding-top: 32px;
+    align-items: center;
+  }
+}
+
+// ─── Info Card ─────────────────────────────────────────────────
+.info-card {
+  background: white;
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+
+  .info-icon  { font-size: 28px; }
+  .info-title { font-weight: 600; font-size: 14px; margin: 0 0 2px; color: #1a1a2e; }
+  .info-desc  { font-size: 12px; color: #666; margin: 0; }
+
+  .xp-chip {
+    margin-left: auto;
+    background: linear-gradient(135deg, #2979ff, #1565c0);
+    color: white;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+}
+
+// ─── Sentence List ─────────────────────────────────────────────
+.sentence-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sentence-card {
+  background: white;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+
+  &:active { transform: scale(0.98); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+
+  .sc-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2979ff, #1565c0);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .sc-content    { flex: 1; min-width: 0; }
+  .sc-english    { font-size: 14px; font-weight: 600; color: #1a1a2e; margin: 0 0 3px; }
+  .sc-indonesian { font-size: 12px; color: #555; margin: 0 0 5px; }
+
+  .sc-category {
+    font-size: 10px;
+    background: #e3f0ff;
+    color: #1565c0;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+
+  .sc-arrow { font-size: 22px; color: #bbb; flex-shrink: 0; }
+}
+
+// ─── Buttons ───────────────────────────────────────────────────
+.primary-btn {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #2979ff, #1565c0);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.outline-btn {
+  width: 100%;
+  padding: 14px;
+  background: transparent;
+  color: #2979ff;
+  border: 2px solid #2979ff;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+// ─── Detail ────────────────────────────────────────────────────
+.detail-card {
+  background: white;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+
+  .detail-num      { font-size: 11px; color: #888; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .detail-english  { font-size: 20px; font-weight: 700; color: #1a1a2e; margin: 0 0 6px; line-height: 1.4; }
+  .detail-phonetic { font-size: 12px; color: #888; font-style: italic; margin: 0 0 14px; }
+  .detail-label    { font-size: 12px; color: #888; margin: 0 0 6px; }
+  .detail-indonesian { font-size: 17px; font-weight: 600; color: #1565c0; margin: 0; }
+}
+
+.divider {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 14px 0;
+}
+
+.vocab-section {
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+
+  .section-title { font-size: 14px; font-weight: 700; color: #1a1a2e; margin: 0 0 12px; }
+}
+
+.vocab-list { display: flex; flex-direction: column; gap: 8px; }
+
+.vocab-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #f8f9fa;
+  border-radius: 10px;
+
+  .vocab-word    { font-weight: 600; color: #1a1a2e; font-size: 13px; }
+  .vocab-arrow   { color: #aaa; font-size: 14px; }
+  .vocab-meaning { color: #1565c0; font-size: 13px; font-weight: 500; }
+}
+
+// ─── Quiz ──────────────────────────────────────────────────────
+.progress-strip {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 4px;
+
+  .q-count { font-size: 13px; color: #555; font-weight: 500; }
+  .q-score { font-size: 13px; color: #2979ff; font-weight: 700; }
+}
+
+.quiz-card {
+  background: white;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+
+  .quiz-label      { font-size: 12px; color: #888; margin: 0 0 6px; }
+  .quiz-indonesian { font-size: 18px; font-weight: 700; color: #1a1a2e; margin: 0; line-height: 1.4; }
+}
+
+.arranged-area {
+  background: white;
+  border: 2px dashed #ccc;
+  border-radius: 14px;
+  padding: 14px;
+  min-height: 64px;
+  transition: border-color 0.3s;
+
+  &.correct { border-color: #4caf50; background: #f1fff3; }
+  &.wrong   { border-color: #f44336; background: #fff3f3; }
+
+  .arranged-label { font-size: 11px; color: #999; margin: 0 0 8px; }
+
+  .placeholder { color: #bbb; font-size: 13px; font-style: italic; }
+}
+
+.word-bank {
+  background: white;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+
+  .bank-label { font-size: 11px; color: #999; margin: 0 0 8px; }
+}
+
+.word-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.word-token {
+  padding: 7px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.1s;
+
+  &:active { transform: scale(0.95); }
+}
+
+.bank-token {
+  background: #e3f0ff;
+  color: #1565c0;
+  border: 1.5px solid #bbdefb;
+}
+
+.arranged-token {
+  background: #1565c0;
+  color: white;
+}
+
+// ─── Feedback ──────────────────────────────────────────────────
+.feedback {
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+
+  &.correct { background: #e8f5e9; color: #2e7d32; }
+  &.wrong   { background: #ffebee; color: #c62828; }
+}
+
+// ─── Result ────────────────────────────────────────────────────
+.result-body {
+  padding-top: 32px !important;
+  align-items: center;
+}
+
+.result-card {
+  background: white;
+  border-radius: 24px;
+  padding: 28px 20px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  width: 100%;
+  margin-bottom: 12px;
+
+  .trophy-icon  { font-size: 52px; margin-bottom: 12px; }
+  .result-title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin: 0 0 6px; }
+  .result-sub   { font-size: 14px; color: #555; margin: 0 0 20px; }
+}
+
+.result-stats {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin: 16px 0;
+
+  .rs-item { text-align: center; }
+  .rs-val  { font-size: 22px; font-weight: 700; color: #1a1a2e; }
+  .rs-val.purple { color: #7b1fa2; }
+  .rs-lbl  { font-size: 11px; color: #888; margin-top: 2px; }
+}

@@ -1,0 +1,57 @@
+<ion-content [fullscreen]="true">
+  <div class="app-wrapper">
+
+    <!-- Header -->
+    <div class="top-bg">
+      <div class="back-btn" (click)="goBack()">← Kembali</div>
+      <h2 class="screen-title">Reward Saya</h2>
+      <p class="screen-sub">{{ unlockedCount }} / {{ badges.length }} badge terbuka</p>
+    </div>
+
+    <div class="body-content">
+
+      <!-- Ringkasan -->
+      <div class="summary-card">
+        <div class="sum-row">
+          <div class="sum-item">
+            <div class="sum-val">{{ xp }}</div>
+            <div class="sum-lbl">Total XP</div>
+          </div>
+          <div class="sum-item">
+            <div class="sum-val">{{ accuracy }}%</div>
+            <div class="sum-lbl">Akurasi</div>
+          </div>
+          <div class="sum-item">
+            <div class="sum-val">{{ streak }}</div>
+            <div class="sum-lbl">Streak</div>
+          </div>
+        </div>
+        <div class="level-row">
+          <span class="lv-name">{{ currentLevel.name }}</span>
+          <span class="lv-badge">Level {{ currentLevelIndex + 1 }}</span>
+        </div>
+        <div class="prog-bg">
+          <div class="prog-fill" [style.width.%]="levelProgress"></div>
+        </div>
+        <div class="prog-info">
+          <span>{{ xp }} XP</span>
+          <span>{{ currentLevel.next }} XP</span>
+        </div>
+      </div>
+
+      <!-- Badge Grid -->
+      <p class="section-title">🏅 Koleksi Badge</p>
+      <div class="badge-grid">
+        <div class="badge-card" *ngFor="let b of badges" [class.unlocked]="b.req()">
+          <div class="badge-icon">{{ b.req() ? b.icon : '🔒' }}</div>
+          <div class="badge-name">{{ b.name }}</div>
+          <div class="badge-desc">{{ b.desc }}</div>
+          <div class="badge-status" [class.done]="b.req()">
+            {{ b.req() ? 'Terbuka ✓' : 'Terkunci' }}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</ion-content>

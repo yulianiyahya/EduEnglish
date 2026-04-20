@@ -1,0 +1,131 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text="Kembali"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Profil</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="profil-wrapper">
+
+    <!-- Header -->
+    <div class="profil-header">
+      <div class="avatar-ring">
+        <span class="avatar-initials">{{ userInitials }}</span>
+      </div>
+      <p class="profil-name">{{ userName }}</p>
+      <p class="profil-level">
+        <span>Pelajar Aktif</span>
+        <span class="level-badge">{{ currentLevel.badge }}</span>
+      </p>
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-num">{{ totalXP }}</div>
+          <div class="stat-lbl">Total XP</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">{{ streakDays }}</div>
+          <div class="stat-lbl">Hari Streak</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">{{ accuracy }}%</div>
+          <div class="stat-lbl">Akurasi</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="profil-body">
+
+      <!-- Progres Level -->
+      <p class="section-label">Progres Level</p>
+      <ion-card class="profil-card">
+        <div class="progress-row">
+          <div class="progress-meta">
+            <span class="prog-label">{{ currentLevel.name }} {{ currentLevel.badge }}</span>
+            <span class="prog-xp">{{ totalXP }} / {{ currentLevel.maxXP }} XP</span>
+          </div>
+          <div class="xp-bar-bg">
+            <div class="xp-bar-fill" [style.width.%]="levelProgress"></div>
+          </div>
+        </div>
+      </ion-card>
+
+      <!-- Akun Saya -->
+      <p class="section-label">Akun Saya</p>
+      <ion-card class="profil-card">
+
+        <ion-item lines="full" button (click)="editProfil()">
+          <div class="row-icon icon-blue" slot="start">👤</div>
+          <ion-label>
+            <h3>Edit Profil</h3>
+            <p>Nama &amp; foto</p>
+          </ion-label>
+          <span slot="end" class="row-value">{{ userName }}</span>
+        </ion-item>
+
+        <ion-item lines="full" button (click)="editTarget()">
+          <div class="row-icon icon-teal" slot="start">🎯</div>
+          <ion-label>
+            <h3>Target Harian</h3>
+            <p>Soal per hari</p>
+          </ion-label>
+          <span slot="end" class="row-value">{{ dailyTarget }} soal</span>
+        </ion-item>
+
+        <ion-item lines="none" button (click)="toggleNotif()">
+          <div class="row-icon icon-amber" slot="start">🔔</div>
+          <ion-label>
+            <h3>Notifikasi</h3>
+            <p>Pengingat belajar</p>
+          </ion-label>
+          <ion-toggle slot="end" [(ngModel)]="notifActive"></ion-toggle>
+        </ion-item>
+
+      </ion-card>
+
+      <!-- Statistik -->
+      <p class="section-label">Statistik Belajar</p>
+      <ion-card class="profil-card">
+
+        <ion-item lines="full">
+          <div class="row-icon icon-green" slot="start">✅</div>
+          <ion-label><h3>Total Jawaban Benar</h3></ion-label>
+          <span slot="end" class="row-value highlight">{{ totalCorrect }}</span>
+        </ion-item>
+
+        <ion-item lines="full">
+          <div class="row-icon icon-blue" slot="start">📝</div>
+          <ion-label><h3>Total Soal Dikerjakan</h3></ion-label>
+          <span slot="end" class="row-value">{{ totalQuestions }}</span>
+        </ion-item>
+
+        <ion-item lines="none">
+          <div class="row-icon icon-amber" slot="start">🔥</div>
+          <ion-label><h3>Streak Saat Ini</h3></ion-label>
+          <span slot="end" class="row-value highlight">{{ streakDays }} hari</span>
+        </ion-item>
+
+      </ion-card>
+
+      <!-- Lainnya -->
+      <p class="section-label">Lainnya</p>
+      <ion-card class="profil-card">
+
+        <ion-item lines="full" button>
+          <div class="row-icon icon-blue" slot="start">ℹ️</div>
+          <ion-label><h3>Tentang Aplikasi</h3><p>Versi 1.0.0</p></ion-label>
+        </ion-item>
+
+        <ion-item lines="none" button (click)="keluar()">
+          <div class="row-icon icon-red" slot="start">🚪</div>
+          <ion-label color="danger"><h3>Keluar</h3></ion-label>
+        </ion-item>
+
+      </ion-card>
+
+    </div>
+  </div>
+</ion-content>

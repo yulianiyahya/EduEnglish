@@ -1,0 +1,168 @@
+<ion-content [fullscreen]="true">
+  <div class="app-wrapper">
+
+    <!-- ═══ LIST ═══ -->
+    <ng-container *ngIf="currentScreen === 'list'">
+      <div class="top-bg">
+        <div class="back-btn" (click)="goBack()">← Kembali</div>
+        <h2 class="screen-title">Kalimat Harian</h2>
+        <p class="screen-sub">Latihan kalimat nyata hari ini</p>
+      </div>
+
+      <div class="body-content">
+        <div class="info-card">
+          <span class="info-icon">💬</span>
+          <div>
+            <p class="info-title">{{ todaySentences.length }} Kalimat Hari Ini</p>
+            <p class="info-desc">Pelajari lalu uji pemahamanmu</p>
+          </div>
+          <div class="xp-chip">{{ xp }} XP</div>
+        </div>
+
+        <div class="sentence-list">
+          <div
+            class="sentence-card"
+            *ngFor="let s of todaySentences; let i = index"
+            (click)="openDetail(s, i)"
+          >
+            <div class="sc-number">{{ i + 1 }}</div>
+            <div class="sc-content">
+              <p class="sc-english">{{ s.english }}</p>
+              <p class="sc-indonesian">{{ s.indonesian }}</p>
+              <span class="sc-category">{{ s.category }}</span>
+            </div>
+            <div class="sc-arrow">›</div>
+          </div>
+        </div>
+
+        <button class="primary-btn" (click)="startQuiz()">
+          🎯 Mulai Kuis Kalimat
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- ═══ DETAIL ═══ -->
+    <ng-container *ngIf="currentScreen === 'detail'">
+      <div class="top-bg detail-bg">
+        <div class="back-btn" (click)="goBack()">← Kembali</div>
+        <h2 class="screen-title">Detail Kalimat</h2>
+        <p class="screen-sub">{{ selectedSentence?.category }}</p>
+      </div>
+
+      <div class="body-content" *ngIf="selectedSentence">
+        <div class="detail-card">
+          <p class="detail-num">Kalimat {{ selectedIndex + 1 }}</p>
+          <h2 class="detail-english">{{ selectedSentence.english }}</h2>
+          <p class="detail-phonetic">{{ selectedSentence.pronunciation }}</p>
+          <div class="divider"></div>
+          <p class="detail-label">Artinya dalam Bahasa Indonesia:</p>
+          <p class="detail-indonesian">{{ selectedSentence.indonesian }}</p>
+        </div>
+
+        <div class="vocab-section">
+          <p class="section-title">📖 Kosa Kata Penting</p>
+          <div class="vocab-list">
+            <div class="vocab-item" *ngFor="let w of selectedSentence.words">
+              <span class="vocab-word">{{ w.word }}</span>
+              <span class="vocab-arrow">→</span>
+              <span class="vocab-meaning">{{ w.meaning }}</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="primary-btn" (click)="goBack()">
+          ← Kembali ke Daftar
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- ═══ QUIZ ═══ -->
+    <ng-container *ngIf="currentScreen === 'quiz'">
+      <div class="top-bg quiz-bg">
+        <div class="back-btn" (click)="goBack()">← Kembali</div>
+        <h2 class="screen-title">Kuis Kalimat</h2>
+        <p class="screen-sub">Susun kata menjadi kalimat yang benar</p>
+      </div>
+
+      <div class="body-content" *ngIf="quizSentence">
+        <div class="progress-strip">
+          <span class="q-count">Soal {{ quizIndex + 1 }} / {{ quizSentences.length }}</span>
+          <span class="q-score">Skor: {{ quizScore }}</span>
+        </div>
+
+        <div class="quiz-card">
+          <p class="quiz-label">Terjemahkan kalimat ini:</p>
+          <p class="quiz-indonesian">{{ quizSentence.indonesian }}</p>
+        </div>
+
+        <!-- Area jawaban -->
+        <div class="arranged-area" [class.correct]="quizAnswered && quizCorrect" [class.wrong]="quizAnswered && !quizCorrect">
+          <p class="arranged-label">Kalimatmu:</p>
+          <div class="word-tokens arranged">
+            <span
+              class="word-token arranged-token"
+              *ngFor="let w of arrangedWords; let i = index"
+              (click)="removeWord(w, i)"
+            >{{ w }}</span>
+            <span class="placeholder" *ngIf="arrangedWords.length === 0">Pilih kata di bawah...</span>
+          </div>
+        </div>
+
+        <!-- Bank kata -->
+        <div class="word-bank" *ngIf="!quizAnswered">
+          <p class="bank-label">Pilih kata:</p>
+          <div class="word-tokens">
+            <span
+              class="word-token bank-token"
+              *ngFor="let w of availableWords; let i = index"
+              (click)="pickWord(w, i)"
+            >{{ w }}</span>
+          </div>
+        </div>
+
+        <div class="feedback correct" *ngIf="quizAnswered && quizCorrect">
+          ✓ Benar! +15 poin
+        </div>
+        <div class="feedback wrong" *ngIf="quizAnswered && !quizCorrect">
+          ✗ Kurang tepat. Jawaban: <strong>{{ quizSentence.english }}</strong>
+        </div>
+
+        <button class="primary-btn" *ngIf="quizAnswered" (click)="nextQuiz()">
+          {{ quizIndex + 1 < quizSentences.length ? 'Soal Berikutnya →' : 'Lihat Hasil' }}
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- ═══ RESULT ═══ -->
+    <ng-container *ngIf="currentScreen === 'result'">
+      <div class="body-content result-body">
+        <div class="result-card">
+          <div class="trophy-icon">{{ resultEmoji }}</div>
+          <h2 class="result-title">{{ resultTitle }}</h2>
+          <p class="result-sub">
+            Kamu menjawab {{ resultCorrectCount }} dari {{ quizSentences.length }} soal dengan benar
+          </p>
+
+          <div class="result-stats">
+            <div class="rs-item">
+              <div class="rs-val">{{ resultCorrectCount }}/{{ quizSentences.length }}</div>
+              <div class="rs-lbl">Benar</div>
+            </div>
+            <div class="rs-item">
+              <div class="rs-val purple">+{{ resultXpGain }}</div>
+              <div class="rs-lbl">XP Dapat</div>
+            </div>
+            <div class="rs-item">
+              <div class="rs-val">{{ accuracy }}%</div>
+              <div class="rs-lbl">Akurasi</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="primary-btn" (click)="goBack()">Kembali ke Beranda</button>
+        <button class="outline-btn" (click)="startQuiz()">Coba Lagi</button>
+      </div>
+    </ng-container>
+
+  </div>
+</ion-content>

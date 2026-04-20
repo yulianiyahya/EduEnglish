@@ -1,20 +1,52 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>
-      Blank
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <div class="landing-container">
 
-  <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
+    <!-- Logo / Icon -->
+    <div class="logo-circle">
+      <ion-icon name="language-outline"></ion-icon>
+    </div>
+
+    <!-- App Name -->
+    <h1 class="app-title">EnglishUp!</h1>
+    <p class="app-subtitle">Belajar bahasa Inggris seru, mudah & menyenangkan 🎓</p>
+
+    <!-- Level Badge -->
+    <div class="level-badge">
+      <ion-icon name="star-outline"></ion-icon>
+      <span>Mulai dari Level Pemula hingga Mahir</span>
+    </div>
+
+    <!-- Features -->
+    <div class="features">
+      <div class="feature-item">
+        <ion-icon name="book-outline"></ion-icon>
+        <span>Latihan Kosakata</span>
+      </div>
+      <div class="feature-item">
+        <ion-icon name="game-controller-outline"></ion-icon>
+        <span>Mini Games</span>
+      </div>
+      <div class="feature-item">
+        <ion-icon name="bar-chart-outline"></ion-icon>
+        <span>Level & Progres</span>
+      </div>
+      <div class="feature-item">
+        <ion-icon name="trophy-outline"></ion-icon>
+        <span>Skor & Reward</span>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="btn-group">
+      <ion-button expand="block" class="btn-mulai" routerLink="/register">
+        Mulai Belajar
+      </ion-button>
+      <ion-button expand="block" fill="outline" class="btn-masuk" routerLink="/login">
+        Sudah Punya Akun? Masuk
+      </ion-button>
+    </div>
+
+    <p class="footer-text">© 2025 EnglishUp!. All rights reserved.</p>
+
   </div>
 </ion-content>

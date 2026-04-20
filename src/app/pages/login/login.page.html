@@ -1,0 +1,60 @@
+<ion-content [fullscreen]="true" class="login-content">
+  <div class="login-container">
+
+    <!-- Logo -->
+    <div class="logo-circle">
+      <ion-icon name="language-outline"></ion-icon>
+    </div>
+
+    <h1 class="app-title">EnglishUp!</h1>
+    <p class="app-subtitle">Masuk & lanjutkan belajarmu 👋</p>
+
+    <!-- Form Login -->
+    <div class="form-group">
+      <ion-item class="input-item">
+        <ion-icon name="mail-outline" slot="start"></ion-icon>
+        <ion-input
+          type="email"
+          placeholder="Email"
+          [(ngModel)]="email"
+          clearInput>
+        </ion-input>
+      </ion-item>
+
+      <ion-item class="input-item">
+        <ion-icon name="lock-closed-outline" slot="start"></ion-icon>
+        <ion-input
+          [type]="showPassword ? 'text' : 'password'"
+          placeholder="Password"
+          [(ngModel)]="password"
+          clearInput>
+        </ion-input>
+        <ion-icon
+          [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"
+          slot="end"
+          (click)="togglePassword()">
+        </ion-icon>
+      </ion-item>
+
+      <p class="forgot-password" routerLink="/forgot-password">Lupa Password?</p>
+    </div>
+
+    <!-- Tombol Login -->
+    <ion-button expand="block" class="btn-login" (click)="login()">
+      Masuk
+    </ion-button>
+
+    <div class="divider">
+      <span>atau</span>
+    </div>
+
+    <!-- Daftar -->
+    <p class="register-text">
+      Belum punya akun?
+      <span routerLink="/register">Daftar Sekarang</span>
+    </p>
+
+    <p class="footer-text">© 2025 EnglishUp!</p>
+
+  </div>
+</ion-content>

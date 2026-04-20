@@ -1,0 +1,130 @@
+ion-content {
+  --background: linear-gradient(160deg, #1565c0, #1e88e5, #e3f2fd);
+}
+
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.logo-circle {
+  width: 100px;
+  height: 100px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+
+  ion-icon {
+    font-size: 52px;
+    color: #1565c0;
+  }
+}
+
+.app-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: white;
+  margin: 0 0 8px 0;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  letter-spacing: 1px;
+}
+
+.app-subtitle {
+  font-size: 15px;
+  color: rgba(255,255,255,0.9);
+  margin: 0 0 32px 0;
+  line-height: 1.5;
+}
+
+.form-group {
+  width: 100%;
+  max-width: 340px;
+  margin-bottom: 20px;
+}
+
+.input-item {
+  --background: rgba(255,255,255,0.6);
+  --border-radius: 16px;
+  --color: #333;
+  --placeholder-color: rgba(0,0,0,0.35);
+  --padding-start: 12px;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+
+  ion-icon {
+    color: #1565c0;
+    margin-right: 8px;
+  }
+}
+
+.forgot-password {
+  text-align: right;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 4px;
+  cursor: pointer;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+
+.btn-login {
+  --background: white;
+  --color: #1565c0;
+  --border-radius: 16px;
+  --box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  font-weight: 700;
+  font-size: 16px;
+  height: 52px;
+  width: 100%;
+  max-width: 340px;
+  margin-bottom: 24px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 340px;
+  margin: 0 0 16px;
+
+  &::before, &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.5);
+  }
+
+  span {
+    color: rgba(255,255,255,0.9);
+    font-size: 13px;
+    padding: 0 12px;
+  }
+}
+
+.register-text {
+  color: rgba(255,255,255,0.9);
+  font-size: 14px;
+
+  span {
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+}
+
+.footer-text {
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  margin-top: 32px;
+}

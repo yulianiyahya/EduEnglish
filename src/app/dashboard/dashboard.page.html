@@ -1,0 +1,212 @@
+<ion-content [fullscreen]="true">
+  <div class="app-wrapper">
+
+    <!-- ═══ HOME ═══ -->
+    <ng-container *ngIf="currentScreen === 'home'">
+      <div class="top-bg">
+        <div class="top-row">
+          <div>
+            <p class="greeting">Selamat belajar! 📖</p>
+            <h2 class="nama">{{ nama }}</h2>
+          </div>
+          <div class="xp-chip">{{ xp }} XP</div>
+        </div>
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-val">{{ streak }}</div>
+            <div class="stat-lbl">Hari Streak</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val">{{ totalCorrect }}</div>
+            <div class="stat-lbl">Benar</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val">{{ totalAnswered }}</div>
+            <div class="stat-lbl">Total Soal</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="body-content">
+        <div class="level-card">
+          <div class="level-head">
+            <span class="level-name">{{ currentLevel.name }}</span>
+            <span class="level-badge">Level {{ currentLevelIndex + 1 }}</span>
+          </div>
+          <div class="prog-bg">
+            <div class="prog-fill" [style.width.%]="levelProgress"></div>
+          </div>
+          <div class="prog-info">
+            <span>{{ xp }} XP</span>
+            <span>{{ currentLevel.next }} XP</span>
+          </div>
+        </div>
+
+        <p class="section-title">Mode Belajar</p>
+        <div class="menu-grid">
+          <div class="menu-card" (click)="startVocab()">
+            <div class="menu-icon purple">📚</div>
+            <p class="menu-name">Tebak Arti</p>
+            <p class="menu-desc">Pilih arti kata yang tepat</p>
+          </div>
+          <div class="menu-card" (click)="startGame()">
+            <div class="menu-icon violet">🎮</div>
+            <p class="menu-name">Susun Kata</p>
+            <p class="menu-desc">Eja kata dari petunjuk</p>
+          </div>
+          <div class="menu-card" routerLink="/kalimat">
+            <div class="menu-icon green">💬</div>
+            <p class="menu-name">Kalimat Harian</p>
+            <p class="menu-desc">Latihan kalimat nyata</p>
+          </div>
+          <div class="menu-card" routerLink="/reward">
+            <div class="menu-icon amber">🏆</div>
+            <p class="menu-name">Reward Saya</p>
+            <p class="menu-desc">Lihat pencapaian</p>
+          </div>
+          <div class="menu-card" routerLink="/profil">
+            <div class="menu-icon blue">👤</div>
+            <p class="menu-name">Profil Saya</p>
+            <p class="menu-desc">Lihat dan edit profil</p>
+          </div>
+        </div>
+
+        <p class="section-title">Streak Minggu Ini</p>
+        <div class="streak-card">
+          <div class="streak-row">
+            <div class="day-dot" *ngFor="let d of streakDays" [class]="d.state">
+              {{ d.label }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ═══ VOCAB QUIZ ═══ -->
+    <ng-container *ngIf="currentScreen === 'vocab'">
+      <div class="top-bg vocab">
+        <div class="back-btn" (click)="showHome()">← Kembali</div>
+        <h2 class="screen-title">Tebak Arti Kata</h2>
+        <p class="screen-sub">Pilih arti yang benar</p>
+      </div>
+
+      <div class="body-content">
+        <div class="progress-strip">
+          <span class="q-count">Soal {{ vocabIndex + 1 }} / {{ vocabQuestions.length }}</span>
+          <span class="q-score">Skor: {{ vocabScore }}</span>
+        </div>
+
+        <div class="word-card">
+          <h1 class="word-eng">{{ currentVocabQ.word }}</h1>
+          <p class="word-phonetic">{{ currentVocabQ.phonetic }}</p>
+          <p class="word-example">{{ currentVocabQ.example }}</p>
+        </div>
+
+        <div class="choices-grid">
+          <button
+            class="choice-btn"
+            *ngFor="let c of shuffledChoices"
+            [class]="choiceClass(c)"
+            (click)="answerVocab(c)"
+          >{{ c }}</button>
+        </div>
+
+        <div class="feedback correct" *ngIf="vocabAnswered && selectedAnswer === correctAnswer">
+          Benar! +10 poin ✓
+        </div>
+        <div class="feedback wrong" *ngIf="vocabAnswered && selectedAnswer !== correctAnswer">
+          Salah. Jawaban: {{ correctAnswer }}
+        </div>
+
+        <button class="primary-btn" *ngIf="vocabAnswered" (click)="nextVocabQuestion()">
+          Soal Berikutnya →
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- ═══ WORD GAME ═══ -->
+    <ng-container *ngIf="currentScreen === 'game'">
+      <div class="top-bg game">
+        <div class="back-btn" (click)="showHome()">← Kembali</div>
+        <h2 class="screen-title">Susun Kata</h2>
+        <p class="screen-sub">Ketik terjemahan kata berikut</p>
+      </div>
+
+      <div class="body-content">
+        <div class="progress-strip">
+          <span class="q-count">Soal {{ gameIndex + 1 }} / {{ gameWords.length }}</span>
+          <span class="q-score">Skor: {{ gameScore }}</span>
+        </div>
+
+        <div class="timer-bar">
+          <div class="timer-fill" [style.width.%]="gameTimeLeft"></div>
+        </div>
+
+        <div class="word-card game-card">
+          <p class="game-label">Terjemahkan ke Bahasa Inggris:</p>
+          <h1 class="word-eng game">{{ currentGameQ.indo }}</h1>
+          <p class="game-hint">Petunjuk: {{ currentGameQ.hint }}</p>
+        </div>
+
+        <div class="hint-boxes">
+          <div class="letter-box" *ngFor="let l of hintBoxes" [class.filled]="l">
+            {{ l }}
+          </div>
+        </div>
+
+        <ion-input
+          class="game-input"
+          [(ngModel)]="gameInput"
+          (ionInput)="onGameInput()"
+          [disabled]="gameAnswered"
+          placeholder="Ketik jawabanmu..."
+          autocomplete="off"
+          autocorrect="off"
+        ></ion-input>
+
+        <div class="feedback correct" *ngIf="gameAnswered && gameCorrectThisRound">
+          Benar! Waktu sisa bonus dihitung ✓
+        </div>
+        <div class="feedback wrong" *ngIf="gameAnswered && !gameCorrectThisRound">
+          Jawaban: {{ currentGameQ.eng }}
+        </div>
+
+        <button class="primary-btn game" *ngIf="gameAnswered" (click)="nextGameQuestion()">
+          Soal Berikutnya →
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- ═══ RESULT ═══ -->
+    <ng-container *ngIf="currentScreen === 'result'">
+      <div class="body-content result-body">
+        <div class="result-card">
+          <div class="trophy-icon">{{ resultTrophyIcon }}</div>
+          <h2 class="result-title">{{ resultTitle }}</h2>
+          <p class="result-sub">{{ resultSub }}</p>
+
+          <div class="result-stats">
+            <div class="rs-item">
+              <div class="rs-val">{{ resultCorrect }}</div>
+              <div class="rs-lbl">Benar</div>
+            </div>
+            <div class="rs-item">
+              <div class="rs-val purple">{{ resultXp }}</div>
+              <div class="rs-lbl">XP Dapat</div>
+            </div>
+            <div class="rs-item">
+              <div class="rs-val">{{ resultAccuracy }}</div>
+              <div class="rs-lbl">Akurasi</div>
+            </div>
+          </div>
+
+          <div class="reward-badge">{{ resultReward }}</div>
+        </div>
+
+        <button class="primary-btn" (click)="showHome()">Kembali ke Beranda</button>
+        <button class="outline-btn" (click)="replayMode()">Main Lagi</button>
+      </div>
+    </ng-container>
+
+  </div>
+</ion-content>
