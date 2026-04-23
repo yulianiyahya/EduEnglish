@@ -1,17 +1,13 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
 import { LoginPageRoutingModule } from './login-routing.module';
 import { LoginPage } from './login.page';
 
 @NgModule({
   imports: [
-    LoginPage,
-    CommonModule,
-    FormsModule,
-    IonicModule,
+    LoginPage,           // ✅ standalone component → masuk ke imports, BUKAN declarations
     LoginPageRoutingModule
   ]
+  // ✅ HAPUS: CommonModule, FormsModule, IonicModule
+  //    karena sudah di-import langsung di LoginPage (standalone)
 })
 export class LoginPageModule {}

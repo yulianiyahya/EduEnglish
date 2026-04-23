@@ -62,7 +62,7 @@ ion-content {
   --color: #333;
   --placeholder-color: rgba(0,0,0,0.35);
   --padding-start: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 4px; // dikecilkan biar error text mepet
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 
@@ -70,6 +70,22 @@ ion-content {
     color: #1565c0;
     margin-right: 8px;
   }
+
+  // ✅ State error → border merah
+  &.item-error {
+    --background: rgba(255, 220, 220, 0.75);
+    box-shadow: 0 0 0 2px rgba(255, 80, 80, 0.5);
+  }
+}
+
+// ✅ Teks error di bawah field
+.error-text {
+  color: #ffe0e0;
+  font-size: 12px;
+  text-align: left;
+  margin: 0 4px 10px 8px;
+  font-weight: 500;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
 .btn-group {

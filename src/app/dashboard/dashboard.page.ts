@@ -2,6 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { GeminiService, GeneratedVocab, GeneratedGame } from '../services/gemini.service';
+import { AlertController, LoadingController, ToastController } from '@ionic/angular';
 import { RouterModule, Router } from '@angular/router';
 
 export interface VocabQuestion {
@@ -55,127 +57,118 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   days = ['S','S','R','K','J','S','M'];
 
-  // ─── POOL SOAL BESAR (50 vocab, 40 game) ──────────────────────
-
+  // ─── POOL SOAL ───────────────────────────────────────────────
   private allVocabPool: VocabQuestion[] = [
     // Hewan
-    { word: 'CAT',       phonetic: '/kæt/',          example: '"The cat is sleeping."',              answer: 'Kucing',   choices: ['Kucing','Anjing','Kelinci','Tikus']        },
-    { word: 'DOG',       phonetic: '/dɒɡ/',           example: '"My dog likes to play."',             answer: 'Anjing',   choices: ['Kucing','Anjing','Harimau','Singa']        },
-    { word: 'BIRD',      phonetic: '/bɜːrd/',         example: '"The bird sings in the morning."',    answer: 'Burung',   choices: ['Ikan','Burung','Katak','Kupu-kupu']        },
-    { word: 'FISH',      phonetic: '/fɪʃ/',           example: '"I caught a big fish."',              answer: 'Ikan',     choices: ['Ikan','Udang','Kepiting','Cumi']           },
-    { word: 'RABBIT',    phonetic: '/ˈræbɪt/',        example: '"The rabbit eats carrots."',          answer: 'Kelinci',  choices: ['Tikus','Hamster','Kelinci','Tupai']        },
+    { word: 'CAT',       phonetic: '/kæt/',        example: '"The cat is sleeping."',              answer: 'Kucing',              choices: ['Kucing','Anjing','Kelinci','Tikus']                },
+    { word: 'DOG',       phonetic: '/dɒɡ/',         example: '"My dog likes to play."',             answer: 'Anjing',              choices: ['Kucing','Anjing','Harimau','Singa']                },
+    { word: 'BIRD',      phonetic: '/bɜːrd/',       example: '"The bird sings in the morning."',    answer: 'Burung',              choices: ['Ikan','Burung','Katak','Kupu-kupu']                },
+    { word: 'FISH',      phonetic: '/fɪʃ/',         example: '"I caught a big fish."',              answer: 'Ikan',                choices: ['Ikan','Udang','Kepiting','Cumi']                   },
+    { word: 'RABBIT',    phonetic: '/ˈræbɪt/',      example: '"The rabbit eats carrots."',          answer: 'Kelinci',             choices: ['Tikus','Hamster','Kelinci','Tupai']                },
     // Buah
-    { word: 'APPLE',     phonetic: '/ˈæpəl/',         example: '"I eat an apple every morning."',     answer: 'Apel',     choices: ['Apel','Jeruk','Mangga','Anggur']           },
-    { word: 'MANGO',     phonetic: '/ˈmæŋɡoʊ/',       example: '"The mango is very sweet."',          answer: 'Mangga',   choices: ['Pepaya','Pisang','Mangga','Jambu']         },
-    { word: 'GRAPE',     phonetic: '/ɡreɪp/',         example: '"She loves eating grapes."',          answer: 'Anggur',   choices: ['Leci','Anggur','Stroberi','Ceri']          },
-    { word: 'BANANA',    phonetic: '/bəˈnɑːnə/',      example: '"Monkeys love bananas."',             answer: 'Pisang',   choices: ['Pisang','Pepaya','Durian','Nanas']         },
-    { word: 'ORANGE',    phonetic: '/ˈɒrɪndʒ/',       example: '"I drink orange juice."',             answer: 'Jeruk',    choices: ['Lemon','Jeruk','Nanas','Semangka']         },
+    { word: 'APPLE',     phonetic: '/ˈæpəl/',       example: '"I eat an apple every morning."',     answer: 'Apel',                choices: ['Apel','Jeruk','Mangga','Anggur']                   },
+    { word: 'MANGO',     phonetic: '/ˈmæŋɡoʊ/',     example: '"The mango is very sweet."',          answer: 'Mangga',              choices: ['Pepaya','Pisang','Mangga','Jambu']                 },
+    { word: 'GRAPE',     phonetic: '/ɡreɪp/',       example: '"She loves eating grapes."',          answer: 'Anggur',              choices: ['Leci','Anggur','Stroberi','Ceri']                  },
+    { word: 'BANANA',    phonetic: '/bəˈnɑːnə/',    example: '"Monkeys love bananas."',             answer: 'Pisang',              choices: ['Pisang','Pepaya','Durian','Nanas']                 },
+    { word: 'ORANGE',    phonetic: '/ˈɒrɪndʒ/',     example: '"I drink orange juice."',             answer: 'Jeruk',               choices: ['Lemon','Jeruk','Nanas','Semangka']                 },
     // Warna
-    { word: 'RED',       phonetic: '/rɛd/',           example: '"The rose is red."',                  answer: 'Merah',    choices: ['Merah','Biru','Hijau','Kuning']            },
-    { word: 'BLUE',      phonetic: '/bluː/',           example: '"The sky is blue."',                  answer: 'Biru',     choices: ['Ungu','Biru','Hitam','Abu-abu']            },
-    { word: 'GREEN',     phonetic: '/ɡriːn/',         example: '"Grass is green."',                   answer: 'Hijau',    choices: ['Hijau','Kuning','Oranye','Coklat']         },
-    { word: 'YELLOW',    phonetic: '/ˈjɛloʊ/',        example: '"The sun is yellow."',                answer: 'Kuning',   choices: ['Emas','Kuning','Krem','Oranye']            },
-    { word: 'WHITE',     phonetic: '/waɪt/',          example: '"Snow is white."',                    answer: 'Putih',    choices: ['Putih','Hitam','Abu-abu','Perak']          },
+    { word: 'RED',       phonetic: '/rɛd/',         example: '"The rose is red."',                  answer: 'Merah',               choices: ['Merah','Biru','Hijau','Kuning']                    },
+    { word: 'BLUE',      phonetic: '/bluː/',         example: '"The sky is blue."',                  answer: 'Biru',                choices: ['Ungu','Biru','Hitam','Abu-abu']                    },
+    { word: 'GREEN',     phonetic: '/ɡriːn/',       example: '"Grass is green."',                   answer: 'Hijau',               choices: ['Hijau','Kuning','Oranye','Coklat']                 },
+    { word: 'YELLOW',    phonetic: '/ˈjɛloʊ/',      example: '"The sun is yellow."',                answer: 'Kuning',              choices: ['Emas','Kuning','Krem','Oranye']                    },
+    { word: 'WHITE',     phonetic: '/waɪt/',        example: '"Snow is white."',                    answer: 'Putih',               choices: ['Putih','Hitam','Abu-abu','Perak']                  },
     // Tubuh
-    { word: 'EYE',       phonetic: '/aɪ/',            example: '"She has beautiful eyes."',           answer: 'Mata',     choices: ['Mata','Hidung','Telinga','Mulut']          },
-    { word: 'HAND',      phonetic: '/hænd/',          example: '"Wash your hands before eating."',    answer: 'Tangan',   choices: ['Kaki','Tangan','Kepala','Bahu']            },
-    { word: 'NOSE',      phonetic: '/noʊz/',          example: '"My nose is itchy."',                 answer: 'Hidung',   choices: ['Hidung','Bibir','Pipi','Dagu']             },
-    { word: 'MOUTH',     phonetic: '/maʊθ/',          example: '"Open your mouth wide."',             answer: 'Mulut',    choices: ['Gigi','Mulut','Lidah','Tenggorokan']       },
-    { word: 'LEG',       phonetic: '/lɛɡ/',           example: '"He broke his leg."',                 answer: 'Kaki',     choices: ['Lutut','Kaki','Paha','Betis']              },
+    { word: 'EYE',       phonetic: '/aɪ/',          example: '"She has beautiful eyes."',           answer: 'Mata',                choices: ['Mata','Hidung','Telinga','Mulut']                  },
+    { word: 'HAND',      phonetic: '/hænd/',        example: '"Wash your hands before eating."',    answer: 'Tangan',              choices: ['Kaki','Tangan','Kepala','Bahu']                    },
+    { word: 'NOSE',      phonetic: '/noʊz/',        example: '"My nose is itchy."',                 answer: 'Hidung',              choices: ['Hidung','Bibir','Pipi','Dagu']                     },
+    { word: 'MOUTH',     phonetic: '/maʊθ/',        example: '"Open your mouth wide."',             answer: 'Mulut',               choices: ['Gigi','Mulut','Lidah','Tenggorokan']               },
+    { word: 'LEG',       phonetic: '/lɛɡ/',         example: '"He broke his leg."',                 answer: 'Kaki',                choices: ['Lutut','Kaki','Paha','Betis']                      },
     // Sifat
-    { word: 'HAPPY',     phonetic: '/ˈhæpi/',         example: '"She looks happy today."',            answer: 'Bahagia',  choices: ['Sedih','Marah','Bahagia','Takut']          },
-    { word: 'SMART',     phonetic: '/smɑːrt/',        example: '"She is a smart student."',           answer: 'Pintar',   choices: ['Bodoh','Pintar','Malas','Rajin']           },
-    { word: 'STRONG',    phonetic: '/strɒŋ/',         example: '"He is very strong."',                answer: 'Kuat',     choices: ['Lemah','Kuat','Tinggi','Pendek']           },
-    { word: 'BEAUTIFUL', phonetic: '/ˈbjuːtɪfəl/',   example: '"The sunset is beautiful."',          answer: 'Indah',    choices: ['Jelek','Besar','Indah','Kecil']            },
-    { word: 'KIND',      phonetic: '/kaɪnd/',         example: '"She is very kind to animals."',      answer: 'Baik hati',choices: ['Jahat','Baik hati','Pemarah','Pemalu']    },
-    // Benda sehari-hari
-    { word: 'BOOK',      phonetic: '/bʊk/',           example: '"I read a book before bed."',         answer: 'Buku',     choices: ['Pensil','Buku','Kertas','Tas']             },
-    { word: 'WATER',     phonetic: '/ˈwɔːtər/',       example: '"Drink more water every day."',       answer: 'Air',      choices: ['Api','Tanah','Angin','Air']                },
-    { word: 'CHAIR',     phonetic: '/tʃɛr/',          example: '"Please sit on the chair."',          answer: 'Kursi',    choices: ['Meja','Kursi','Lemari','Rak']              },
-    { word: 'TABLE',     phonetic: '/ˈteɪbəl/',       example: '"Put it on the table."',              answer: 'Meja',     choices: ['Meja','Lantai','Dinding','Pintu']          },
-    { word: 'DOOR',      phonetic: '/dɔːr/',          example: '"Please close the door."',            answer: 'Pintu',    choices: ['Jendela','Pintu','Dinding','Atap']         },
+    { word: 'HAPPY',     phonetic: '/ˈhæpi/',       example: '"She looks happy today."',            answer: 'Bahagia',             choices: ['Sedih','Marah','Bahagia','Takut']                  },
+    { word: 'SMART',     phonetic: '/smɑːrt/',      example: '"She is a smart student."',           answer: 'Pintar',              choices: ['Bodoh','Pintar','Malas','Rajin']                   },
+    { word: 'STRONG',    phonetic: '/strɒŋ/',       example: '"He is very strong."',                answer: 'Kuat',                choices: ['Lemah','Kuat','Tinggi','Pendek']                   },
+    { word: 'BEAUTIFUL', phonetic: '/ˈbjuːtɪfəl/', example: '"The sunset is beautiful."',          answer: 'Indah',               choices: ['Jelek','Besar','Indah','Kecil']                    },
+    { word: 'KIND',      phonetic: '/kaɪnd/',       example: '"She is very kind to animals."',      answer: 'Baik hati',           choices: ['Jahat','Baik hati','Pemarah','Pemalu']             },
+    // Benda
+    { word: 'BOOK',      phonetic: '/bʊk/',         example: '"I read a book before bed."',         answer: 'Buku',                choices: ['Pensil','Buku','Kertas','Tas']                     },
+    { word: 'WATER',     phonetic: '/ˈwɔːtər/',     example: '"Drink more water every day."',       answer: 'Air',                 choices: ['Api','Tanah','Angin','Air']                        },
+    { word: 'CHAIR',     phonetic: '/tʃɛr/',        example: '"Please sit on the chair."',          answer: 'Kursi',               choices: ['Meja','Kursi','Lemari','Rak']                      },
+    { word: 'TABLE',     phonetic: '/ˈteɪbəl/',     example: '"Put it on the table."',              answer: 'Meja',                choices: ['Meja','Lantai','Dinding','Pintu']                  },
+    { word: 'DOOR',      phonetic: '/dɔːr/',        example: '"Please close the door."',            answer: 'Pintu',               choices: ['Jendela','Pintu','Dinding','Atap']                 },
     // Kegiatan
-    { word: 'RUN',       phonetic: '/rʌn/',           example: '"I run every morning."',              answer: 'Berlari',  choices: ['Berjalan','Berlari','Melompat','Berenang'] },
-    { word: 'SLEEP',     phonetic: '/sliːp/',         example: '"I need to sleep early."',            answer: 'Tidur',    choices: ['Makan','Minum','Berlari','Tidur']          },
-    { word: 'EAT',       phonetic: '/iːt/',           example: '"We eat dinner together."',           answer: 'Makan',    choices: ['Makan','Minum','Memasak','Mencuci']        },
-    { word: 'JUMP',      phonetic: '/dʒʌmp/',         example: '"The frog can jump high."',           answer: 'Melompat', choices: ['Berlari','Melompat','Merangkak','Terbang'] },
-    { word: 'SWIM',      phonetic: '/swɪm/',          example: '"I love to swim in the pool."',       answer: 'Berenang', choices: ['Berenang','Menyelam','Berlayar','Mendayung']},
+    { word: 'RUN',       phonetic: '/rʌn/',         example: '"I run every morning."',              answer: 'Berlari',             choices: ['Berjalan','Berlari','Melompat','Berenang']         },
+    { word: 'SLEEP',     phonetic: '/sliːp/',       example: '"I need to sleep early."',            answer: 'Tidur',               choices: ['Makan','Minum','Berlari','Tidur']                  },
+    { word: 'EAT',       phonetic: '/iːt/',         example: '"We eat dinner together."',           answer: 'Makan',               choices: ['Makan','Minum','Memasak','Mencuci']                },
+    { word: 'JUMP',      phonetic: '/dʒʌmp/',       example: '"The frog can jump high."',           answer: 'Melompat',            choices: ['Berlari','Melompat','Merangkak','Terbang']         },
+    { word: 'SWIM',      phonetic: '/swɪm/',        example: '"I love to swim in the pool."',       answer: 'Berenang',            choices: ['Berenang','Menyelam','Berlayar','Mendayung']       },
     // Tempat
-    { word: 'SCHOOL',    phonetic: '/skuːl/',         example: '"I go to school every day."',         answer: 'Sekolah',  choices: ['Kantor','Sekolah','Rumah Sakit','Pasar']   },
-    { word: 'HOUSE',     phonetic: '/haʊs/',          example: '"My house is near the park."',        answer: 'Rumah',    choices: ['Gedung','Rumah','Istana','Gubuk']          },
-    { word: 'MARKET',    phonetic: '/ˈmɑːrkɪt/',      example: '"Mom buys vegetables at the market."',answer: 'Pasar',    choices: ['Toko','Pasar','Mall','Warung']             },
-    { word: 'PARK',      phonetic: '/pɑːrk/',         example: '"Children play at the park."',        answer: 'Taman',    choices: ['Hutan','Kebun','Taman','Ladang']           },
-    { word: 'HOSPITAL',  phonetic: '/ˈhɒspɪtəl/',    example: '"The doctor works at the hospital."', answer: 'Rumah Sakit',choices:['Klinik','Rumah Sakit','Apotek','Puskesmas']},
+    { word: 'SCHOOL',    phonetic: '/skuːl/',       example: '"I go to school every day."',         answer: 'Sekolah',             choices: ['Kantor','Sekolah','Rumah Sakit','Pasar']           },
+    { word: 'HOUSE',     phonetic: '/haʊs/',        example: '"My house is near the park."',        answer: 'Rumah',               choices: ['Gedung','Rumah','Istana','Gubuk']                  },
+    { word: 'MARKET',    phonetic: '/ˈmɑːrkɪt/',    example: '"Mom buys vegetables at the market."',answer: 'Pasar',               choices: ['Toko','Pasar','Mall','Warung']                     },
+    { word: 'PARK',      phonetic: '/pɑːrk/',       example: '"Children play at the park."',        answer: 'Taman',               choices: ['Hutan','Kebun','Taman','Ladang']                   },
+    { word: 'HOSPITAL',  phonetic: '/ˈhɒspɪtəl/',  example: '"The doctor works at the hospital."', answer: 'Rumah Sakit',         choices: ['Klinik','Rumah Sakit','Apotek','Puskesmas']        },
     // Keluarga
-    { word: 'MOTHER',    phonetic: '/ˈmʌðər/',        example: '"My mother cooks every morning."',    answer: 'Ibu',      choices: ['Ibu','Ayah','Kakak','Adik']                },
-    { word: 'FATHER',    phonetic: '/ˈfɑːðər/',       example: '"My father goes to work early."',     answer: 'Ayah',     choices: ['Paman','Ayah','Kakek','Sepupu']            },
-    { word: 'SISTER',    phonetic: '/ˈsɪstər/',       example: '"My sister likes to draw."',          answer: 'Kakak/Adik perempuan', choices: ['Saudara laki-laki','Kakak/Adik perempuan','Ibu','Bibi'] },
-    { word: 'FRIEND',    phonetic: '/frɛnd/',         example: '"She is my best friend."',            answer: 'Teman',    choices: ['Musuh','Keluarga','Teman','Guru']          },
-    { word: 'TEACHER',   phonetic: '/ˈtiːtʃər/',      example: '"Our teacher is very kind."',         answer: 'Guru',     choices: ['Dokter','Guru','Polisi','Petani']          },
+    { word: 'MOTHER',    phonetic: '/ˈmʌðər/',      example: '"My mother cooks every morning."',    answer: 'Ibu',                 choices: ['Ibu','Ayah','Kakak','Adik']                        },
+    { word: 'FATHER',    phonetic: '/ˈfɑːðər/',     example: '"My father goes to work early."',     answer: 'Ayah',                choices: ['Paman','Ayah','Kakek','Sepupu']                    },
+    { word: 'SISTER',    phonetic: '/ˈsɪstər/',     example: '"My sister likes to draw."',          answer: 'Kakak/Adik perempuan',choices: ['Saudara laki-laki','Kakak/Adik perempuan','Ibu','Bibi'] },
+    { word: 'FRIEND',    phonetic: '/frɛnd/',       example: '"She is my best friend."',            answer: 'Teman',               choices: ['Musuh','Keluarga','Teman','Guru']                  },
+    { word: 'TEACHER',   phonetic: '/ˈtiːtʃər/',    example: '"Our teacher is very kind."',         answer: 'Guru',                choices: ['Dokter','Guru','Polisi','Petani']                  },
     // Alam
-    { word: 'SUN',       phonetic: '/sʌn/',           example: '"The sun rises in the east."',        answer: 'Matahari', choices: ['Bulan','Bintang','Matahari','Awan']        },
-    { word: 'RAIN',      phonetic: '/reɪn/',          example: '"I love walking in the rain."',       answer: 'Hujan',    choices: ['Angin','Hujan','Salju','Kabut']            },
-    { word: 'TREE',      phonetic: '/triː/',          example: '"The tree is very tall."',            answer: 'Pohon',    choices: ['Bunga','Pohon','Rumput','Daun']            },
-    { word: 'FLOWER',    phonetic: '/ˈflaʊər/',       example: '"She picked a beautiful flower."',    answer: 'Bunga',    choices: ['Bunga','Daun','Akar','Ranting']            },
-    { word: 'MOUNTAIN',  phonetic: '/ˈmaʊntɪn/',      example: '"We climbed the mountain together."', answer: 'Gunung',   choices: ['Bukit','Gunung','Lembah','Ngarai']         },
+    { word: 'SUN',       phonetic: '/sʌn/',         example: '"The sun rises in the east."',        answer: 'Matahari',            choices: ['Bulan','Bintang','Matahari','Awan']                },
+    { word: 'RAIN',      phonetic: '/reɪn/',        example: '"I love walking in the rain."',       answer: 'Hujan',               choices: ['Angin','Hujan','Salju','Kabut']                    },
+    { word: 'TREE',      phonetic: '/triː/',        example: '"The tree is very tall."',            answer: 'Pohon',               choices: ['Bunga','Pohon','Rumput','Daun']                    },
+    { word: 'FLOWER',    phonetic: '/ˈflaʊər/',     example: '"She picked a beautiful flower."',    answer: 'Bunga',               choices: ['Bunga','Daun','Akar','Ranting']                    },
+    { word: 'MOUNTAIN',  phonetic: '/ˈmaʊntɪn/',    example: '"We climbed the mountain together."', answer: 'Gunung',              choices: ['Bukit','Gunung','Lembah','Ngarai']                 },
     // Makanan
-    { word: 'RICE',      phonetic: '/raɪs/',          example: '"We eat rice every day."',            answer: 'Nasi',     choices: ['Nasi','Roti','Mie','Jagung']               },
-    { word: 'BREAD',     phonetic: '/brɛd/',          example: '"I eat bread for breakfast."',        answer: 'Roti',     choices: ['Kue','Roti','Biskuit','Cracker']           },
-    { word: 'MILK',      phonetic: '/mɪlk/',          example: '"Drink a glass of milk every day."',  answer: 'Susu',     choices: ['Susu','Jus','Teh','Kopi']                 },
+    { word: 'RICE',      phonetic: '/raɪs/',        example: '"We eat rice every day."',            answer: 'Nasi',                choices: ['Nasi','Roti','Mie','Jagung']                       },
+    { word: 'BREAD',     phonetic: '/brɛd/',        example: '"I eat bread for breakfast."',        answer: 'Roti',                choices: ['Kue','Roti','Biskuit','Cracker']                   },
+    { word: 'MILK',      phonetic: '/mɪlk/',        example: '"Drink a glass of milk every day."',  answer: 'Susu',                choices: ['Susu','Jus','Teh','Kopi']                         },
   ];
 
   private allGamePool: GameWord[] = [
-    // Hewan
-    { indo: 'Kucing',    eng: 'CAT',      hint: '3 huruf, hewan peliharaan'         },
-    { indo: 'Anjing',    eng: 'DOG',      hint: '3 huruf, sahabat manusia'          },
-    { indo: 'Burung',    eng: 'BIRD',     hint: '4 huruf, bisa terbang'             },
-    { indo: 'Ikan',      eng: 'FISH',     hint: '4 huruf, hidup di air'             },
-    { indo: 'Singa',     eng: 'LION',     hint: '4 huruf, raja hutan'               },
-    { indo: 'Gajah',     eng: 'ELEPHANT', hint: '8 huruf, hewan terbesar di darat'  },
-    { indo: 'Kuda',      eng: 'HORSE',    hint: '5 huruf, bisa ditunggangi'         },
-    { indo: 'Kelinci',   eng: 'RABBIT',   hint: '6 huruf, telinganya panjang'       },
-    // Buah
-    { indo: 'Apel',      eng: 'APPLE',    hint: '5 huruf, buah merah/hijau'         },
-    { indo: 'Pisang',    eng: 'BANANA',   hint: '6 huruf, buah kuning'              },
-    { indo: 'Mangga',    eng: 'MANGO',    hint: '5 huruf, buah tropis manis'        },
-    { indo: 'Jeruk',     eng: 'ORANGE',   hint: '6 huruf, buah berwarna oranye'     },
-    { indo: 'Anggur',    eng: 'GRAPE',    hint: '5 huruf, buah kecil ungu/hijau'    },
-    // Benda
-    { indo: 'Buku',      eng: 'BOOK',     hint: '4 huruf, untuk membaca'            },
-    { indo: 'Meja',      eng: 'TABLE',    hint: '5 huruf, tempat menaruh benda'     },
-    { indo: 'Kursi',     eng: 'CHAIR',    hint: '5 huruf, untuk duduk'              },
-    { indo: 'Pintu',     eng: 'DOOR',     hint: '4 huruf, untuk masuk rumah'        },
-    { indo: 'Jendela',   eng: 'WINDOW',   hint: '6 huruf, lubang cahaya di dinding' },
-    { indo: 'Pensil',    eng: 'PENCIL',   hint: '6 huruf, untuk menulis'            },
-    // Tempat
-    { indo: 'Rumah',     eng: 'HOUSE',    hint: '5 huruf, tempat tinggal'           },
-    { indo: 'Sekolah',   eng: 'SCHOOL',   hint: '6 huruf, tempat belajar'           },
-    { indo: 'Pasar',     eng: 'MARKET',   hint: '6 huruf, tempat jual beli'         },
-    { indo: 'Taman',     eng: 'PARK',     hint: '4 huruf, tempat bermain'           },
-    // Kegiatan
-    { indo: 'Makan',     eng: 'EAT',      hint: '3 huruf, kegiatan makan'           },
-    { indo: 'Tidur',     eng: 'SLEEP',    hint: '5 huruf, istirahat malam'          },
-    { indo: 'Terbang',   eng: 'FLY',      hint: '3 huruf, seperti burung'           },
-    { indo: 'Berlari',   eng: 'RUN',      hint: '3 huruf, bergerak cepat'           },
-    { indo: 'Berenang',  eng: 'SWIM',     hint: '4 huruf, bergerak di air'          },
-    { indo: 'Melompat',  eng: 'JUMP',     hint: '4 huruf, loncat ke atas'           },
-    { indo: 'Membaca',   eng: 'READ',     hint: '4 huruf, melihat tulisan'          },
-    { indo: 'Menulis',   eng: 'WRITE',    hint: '5 huruf, membuat tulisan'          },
-    // Alam
-    { indo: 'Matahari',  eng: 'SUN',      hint: '3 huruf, bintang terdekat bumi'    },
-    { indo: 'Hujan',     eng: 'RAIN',     hint: '4 huruf, air dari langit'          },
-    { indo: 'Pohon',     eng: 'TREE',     hint: '4 huruf, tumbuhan besar'           },
-    { indo: 'Bunga',     eng: 'FLOWER',   hint: '6 huruf, tumbuhan harum'           },
-    { indo: 'Gunung',    eng: 'MOUNTAIN', hint: '8 huruf, daratan sangat tinggi'    },
-    { indo: 'Laut',      eng: 'SEA',      hint: '3 huruf, air asin luas'            },
-    // Makanan
-    { indo: 'Nasi',      eng: 'RICE',     hint: '4 huruf, makanan pokok Indonesia'  },
-    { indo: 'Roti',      eng: 'BREAD',    hint: '5 huruf, makanan dari tepung'      },
-    { indo: 'Susu',      eng: 'MILK',     hint: '4 huruf, minuman dari sapi'        },
-    { indo: 'Air',       eng: 'WATER',    hint: '5 huruf, minuman paling penting'   },
+    { indo: 'Kucing',   eng: 'CAT',      hint: '3 huruf, hewan peliharaan'         },
+    { indo: 'Anjing',   eng: 'DOG',      hint: '3 huruf, sahabat manusia'          },
+    { indo: 'Burung',   eng: 'BIRD',     hint: '4 huruf, bisa terbang'             },
+    { indo: 'Ikan',     eng: 'FISH',     hint: '4 huruf, hidup di air'             },
+    { indo: 'Singa',    eng: 'LION',     hint: '4 huruf, raja hutan'               },
+    { indo: 'Gajah',    eng: 'ELEPHANT', hint: '8 huruf, hewan terbesar di darat'  },
+    { indo: 'Kuda',     eng: 'HORSE',    hint: '5 huruf, bisa ditunggangi'         },
+    { indo: 'Kelinci',  eng: 'RABBIT',   hint: '6 huruf, telinganya panjang'       },
+    { indo: 'Apel',     eng: 'APPLE',    hint: '5 huruf, buah merah/hijau'         },
+    { indo: 'Pisang',   eng: 'BANANA',   hint: '6 huruf, buah kuning'              },
+    { indo: 'Mangga',   eng: 'MANGO',    hint: '5 huruf, buah tropis manis'        },
+    { indo: 'Jeruk',    eng: 'ORANGE',   hint: '6 huruf, buah berwarna oranye'     },
+    { indo: 'Anggur',   eng: 'GRAPE',    hint: '5 huruf, buah kecil ungu/hijau'    },
+    { indo: 'Buku',     eng: 'BOOK',     hint: '4 huruf, untuk membaca'            },
+    { indo: 'Meja',     eng: 'TABLE',    hint: '5 huruf, tempat menaruh benda'     },
+    { indo: 'Kursi',    eng: 'CHAIR',    hint: '5 huruf, untuk duduk'              },
+    { indo: 'Pintu',    eng: 'DOOR',     hint: '4 huruf, untuk masuk rumah'        },
+    { indo: 'Jendela',  eng: 'WINDOW',   hint: '6 huruf, lubang cahaya di dinding' },
+    { indo: 'Pensil',   eng: 'PENCIL',   hint: '6 huruf, untuk menulis'            },
+    { indo: 'Rumah',    eng: 'HOUSE',    hint: '5 huruf, tempat tinggal'           },
+    { indo: 'Sekolah',  eng: 'SCHOOL',   hint: '6 huruf, tempat belajar'           },
+    { indo: 'Pasar',    eng: 'MARKET',   hint: '6 huruf, tempat jual beli'         },
+    { indo: 'Taman',    eng: 'PARK',     hint: '4 huruf, tempat bermain'           },
+    { indo: 'Makan',    eng: 'EAT',      hint: '3 huruf, kegiatan makan'           },
+    { indo: 'Tidur',    eng: 'SLEEP',    hint: '5 huruf, istirahat malam'          },
+    { indo: 'Terbang',  eng: 'FLY',      hint: '3 huruf, seperti burung'           },
+    { indo: 'Berlari',  eng: 'RUN',      hint: '3 huruf, bergerak cepat'           },
+    { indo: 'Berenang', eng: 'SWIM',     hint: '4 huruf, bergerak di air'          },
+    { indo: 'Melompat', eng: 'JUMP',     hint: '4 huruf, loncat ke atas'           },
+    { indo: 'Membaca',  eng: 'READ',     hint: '4 huruf, melihat tulisan'          },
+    { indo: 'Menulis',  eng: 'WRITE',    hint: '5 huruf, membuat tulisan'          },
+    { indo: 'Matahari', eng: 'SUN',      hint: '3 huruf, bintang terdekat bumi'    },
+    { indo: 'Hujan',    eng: 'RAIN',     hint: '4 huruf, air dari langit'          },
+    { indo: 'Pohon',    eng: 'TREE',     hint: '4 huruf, tumbuhan besar'           },
+    { indo: 'Bunga',    eng: 'FLOWER',   hint: '6 huruf, tumbuhan harum'           },
+    { indo: 'Gunung',   eng: 'MOUNTAIN', hint: '8 huruf, daratan sangat tinggi'    },
+    { indo: 'Laut',     eng: 'SEA',      hint: '3 huruf, air asin luas'            },
+    { indo: 'Nasi',     eng: 'RICE',     hint: '4 huruf, makanan pokok Indonesia'  },
+    { indo: 'Roti',     eng: 'BREAD',    hint: '5 huruf, makanan dari tepung'      },
+    { indo: 'Susu',     eng: 'MILK',     hint: '4 huruf, minuman dari sapi'        },
+    { indo: 'Air',      eng: 'WATER',    hint: '5 huruf, minuman paling penting'   },
   ];
 
-  // Soal aktif hari ini (dipilih dari pool)
   vocabQuestions: VocabQuestion[] = [];
   gameWords: GameWord[] = [];
 
@@ -208,78 +201,95 @@ export class DashboardPage implements OnInit, OnDestroy {
   resultReward = '';
   private resultMode: 'vocab' | 'game' = 'vocab';
 
-  constructor(private router: Router) {}
+  // ─── Generate state ────────────────────────────────────────────
+  isGenerating = false;
+  generateCooldownSec = 0;
+  private cooldownTimer: any;
+
+  private readonly REQUEST_DELAY_MS = 3000;
+  private readonly MAX_VOCAB_POOL = 200;
+  private readonly MAX_GAME_POOL = 150;
+
+  constructor(
+    private router: Router,
+    private gemini: GeminiService,
+    private alertCtrl: AlertController,
+    private loadingCtrl: LoadingController,
+    private toastCtrl: ToastController
+  ) {}
 
   ngOnInit() {
     this.loadUserName();
     this.loadState();
-    this.loadDailyQuestions(); // ← rotasi harian
+    this.loadSavedPools();
   }
 
   ionViewWillEnter() {
     this.loadUserName();
     this.loadState();
+    // ✅ FIX: Selalu reload pool saat halaman ditampilkan
+    this.loadSavedPools();
   }
 
   ngOnDestroy() {
     this.clearTimer();
+    this.clearCooldownTimer();
   }
 
-  // ─── Rotasi Soal Harian ────────────────────────────────────────
-
-  private getDayIndex(): number {
-    const now = new Date();
-    // Nomor hari sejak epoch — ganti setiap tengah malam
-    return Math.floor(now.getTime() / (1000 * 60 * 60 * 24));
-  }
-
-  private pickDaily<T>(pool: T[], count: number): T[] {
-    const dayIdx = this.getDayIndex();
-    const total  = pool.length;
-    const result: T[] = [];
-    for (let i = 0; i < count; i++) {
-      // Offset merata berdasarkan hari, tidak random — deterministik
-      const idx = (dayIdx * count + i * Math.ceil(total / count)) % total;
-      result.push(pool[idx]);
+  // ─── Pool ─────────────────────────────────────────────────────
+  private loadSavedPools() {
+    try {
+      const v = localStorage.getItem('vocab_pool');
+      if (v) {
+        const p = JSON.parse(v);
+        if (Array.isArray(p) && p.length) {
+          this.allVocabPool = p;
+          console.log('[Pool] vocab_pool loaded:', p.length, 'soal');
+        }
+      }
+    } catch (e) {
+      console.error('[Pool] Gagal load vocab_pool:', e);
     }
-    return result;
-  }
-
-  private loadDailyQuestions() {
-    // Cek apakah soal hari ini sudah disimpan
-    const todayKey = `daily_${this.getDayIndex()}`;
-    const saved    = localStorage.getItem(todayKey);
-
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      this.vocabQuestions = parsed.vocab;
-      this.gameWords      = parsed.game;
-    } else {
-      // Pilih soal baru untuk hari ini
-      this.vocabQuestions = this.pickDaily(this.allVocabPool, 10);
-      this.gameWords      = this.pickDaily(this.allGamePool,  8);
-
-      // Simpan agar konsisten sepanjang hari
-      localStorage.setItem(todayKey, JSON.stringify({
-        vocab: this.vocabQuestions,
-        game:  this.gameWords,
-      }));
-
-      // Hapus key hari kemarin agar tidak menumpuk
-      localStorage.removeItem(`daily_${this.getDayIndex() - 1}`);
+    try {
+      const g = localStorage.getItem('game_pool');
+      if (g) {
+        const p = JSON.parse(g);
+        if (Array.isArray(p) && p.length) {
+          this.allGamePool = p;
+          console.log('[Pool] game_pool loaded:', p.length, 'kata');
+        }
+      }
+    } catch (e) {
+      console.error('[Pool] Gagal load game_pool:', e);
     }
   }
 
-  // ─── Load Nama ─────────────────────────────────────────────────
+  private savePools() {
+    try {
+      localStorage.setItem('vocab_pool', JSON.stringify(this.allVocabPool));
+      localStorage.setItem('game_pool', JSON.stringify(this.allGamePool));
+      console.log('[Pool] Saved — vocab:', this.allVocabPool.length, '| game:', this.allGamePool.length);
+    } catch (e) {
+      console.error('[Pool] Gagal menyimpan pool:', e);
+    }
+  }
+
+  private getRandomQuestions<T>(pool: T[], count: number): T[] {
+    if (!pool.length) return [];
+    const s = [...pool];
+    for (let i = s.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [s[i], s[j]] = [s[j], s[i]];
+    }
+    return s.slice(0, Math.min(count, s.length));
+  }
 
   private loadUserName() {
-    const savedName = localStorage.getItem('userName');
-    const email     = localStorage.getItem('email');
-    if (savedName)   { this.nama = savedName; }
-    else if (email)  { this.nama = email.split('@')[0]; }
+    const n = localStorage.getItem('userName');
+    const e = localStorage.getItem('email');
+    if (n) this.nama = n;
+    else if (e) this.nama = e.split('@')[0];
   }
-
-  // ─── Persistence ───────────────────────────────────────────────
 
   loadState() {
     this.xp            = Number(localStorage.getItem('eng_xp'))      || 0;
@@ -296,21 +306,17 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   // ─── Level helpers ─────────────────────────────────────────────
-
   get currentLevelIndex(): number {
     for (let i = this.levels.length - 1; i >= 0; i--) {
       if (this.xp >= this.levels[i].xp) return i;
     }
     return 0;
   }
-
-  get currentLevel()      { return this.levels[this.currentLevelIndex]; }
-
+  get currentLevel() { return this.levels[this.currentLevelIndex]; }
   get levelProgress(): number {
     const lv = this.currentLevel;
     return Math.min(Math.round(((this.xp - lv.xp) / (lv.next - lv.xp)) * 100), 100);
   }
-
   get streakDays() {
     return this.days.map((d, i) => ({
       label: d,
@@ -319,39 +325,45 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   // ─── Navigation ────────────────────────────────────────────────
-
   showHome()   { this.clearTimer(); this.currentScreen = 'home'; }
   goToProfil() { this.router.navigate(['/profil']); }
   logout()     { localStorage.removeItem('email'); this.router.navigate(['/login']); }
 
-  // ─── Vocab Quiz ────────────────────────────────────────────────
-
+  // ─── Vocab Quiz ───────────────────────────────────────────────
   startVocab() {
-    this.vocabIndex   = 0;
-    this.vocabScore   = 0;
+    // ✅ FIX: Selalu reload pool terbaru dari localStorage sebelum mulai
+    this.loadSavedPools();
+    this.vocabQuestions = this.getRandomQuestions(this.allVocabPool, 10);
+    if (!this.vocabQuestions.length) {
+      this.showToast('Belum ada soal!', 'warning');
+      return;
+    }
+    this.vocabIndex = 0;
+    this.vocabScore = 0;
     this.vocabResults = [];
     this.loadVocabQuestion();
     this.currentScreen = 'vocab';
   }
 
   loadVocabQuestion() {
-    const q              = this.vocabQuestions[this.vocabIndex];
+    const q = this.vocabQuestions[this.vocabIndex];
     this.shuffledChoices = [...q.choices].sort(() => Math.random() - 0.5);
-    this.selectedAnswer  = '';
-    this.correctAnswer   = q.answer;
-    this.vocabAnswered   = false;
+    this.selectedAnswer = '';
+    this.correctAnswer = q.answer;
+    this.vocabAnswered = false;
   }
 
   get currentVocabQ() { return this.vocabQuestions[this.vocabIndex]; }
 
   answerVocab(choice: string) {
     if (this.vocabAnswered) return;
-    this.vocabAnswered  = true;
+    this.vocabAnswered = true;
     this.selectedAnswer = choice;
-    const correct       = choice === this.correctAnswer;
+    const correct = choice === this.correctAnswer;
     if (correct) { this.vocabScore += 10; this.totalCorrect++; }
     this.vocabResults.push(correct);
     this.totalAnswered++;
+    this.saveState();
   }
 
   choiceClass(choice: string): string {
@@ -367,9 +379,15 @@ export class DashboardPage implements OnInit, OnDestroy {
     else this.loadVocabQuestion();
   }
 
-  // ─── Word Game ─────────────────────────────────────────────────
-
+  // ─── Word Game ────────────────────────────────────────────────
   startGame() {
+    // ✅ FIX: Selalu reload pool terbaru dari localStorage sebelum mulai
+    this.loadSavedPools();
+    this.gameWords = this.getRandomQuestions(this.allGamePool, 8);
+    if (!this.gameWords.length) {
+      this.showToast('Belum ada kata game!', 'warning');
+      return;
+    }
     this.gameIndex = 0;
     this.gameScore = 0;
     this.loadGameQuestion();
@@ -378,10 +396,10 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   loadGameQuestion() {
     this.clearTimer();
-    this.gameInput            = '';
-    this.gameAnswered         = false;
+    this.gameInput = '';
+    this.gameAnswered = false;
     this.gameCorrectThisRound = false;
-    this.gameTimeLeft         = 100;
+    this.gameTimeLeft = 100;
     this.updateHintBoxes();
     this.startTimer();
   }
@@ -389,40 +407,45 @@ export class DashboardPage implements OnInit, OnDestroy {
   get currentGameQ() { return this.gameWords[this.gameIndex]; }
 
   updateHintBoxes() {
-    const eng   = this.currentGameQ.eng;
+    const eng = this.currentGameQ.eng;
     const input = this.gameInput.toUpperCase();
     this.hintBoxes = Array.from({ length: eng.length }, (_, i) => input[i] || '');
   }
 
   onGameInput() {
     this.updateHintBoxes();
-    if (this.gameInput.toUpperCase() === this.currentGameQ.eng && !this.gameAnswered) {
+    if (this.gameInput.toUpperCase() === this.currentGameQ.eng && !this.gameAnswered)
       this.submitGame(true, false);
-    }
   }
 
   startTimer() {
     this.gameTimer = setInterval(() => {
-      this.gameTimeLeft -= 1;
-      if (this.gameTimeLeft <= 0) { this.clearTimer(); this.submitGame(false, true); }
+      this.gameTimeLeft--;
+      if (this.gameTimeLeft <= 0) {
+        this.clearTimer();
+        this.submitGame(false, true);
+      }
     }, 150);
   }
 
   clearTimer() {
-    if (this.gameTimer) { clearInterval(this.gameTimer); this.gameTimer = null; }
+    if (this.gameTimer) {
+      clearInterval(this.gameTimer);
+      this.gameTimer = null;
+    }
   }
 
   submitGame(correct: boolean, timeout: boolean) {
     if (this.gameAnswered) return;
-    this.gameAnswered         = true;
+    this.gameAnswered = true;
     this.gameCorrectThisRound = correct;
     this.clearTimer();
     if (correct) {
-      const bonus = Math.round(this.gameTimeLeft / 10);
-      this.gameScore += 10 + bonus;
+      this.gameScore += 10 + Math.round(this.gameTimeLeft / 10);
       this.totalCorrect++;
     }
     this.totalAnswered++;
+    this.saveState();
   }
 
   nextGameQuestion() {
@@ -432,23 +455,20 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   // ─── Result ────────────────────────────────────────────────────
-
   showResult(mode: 'vocab' | 'game') {
-    this.resultMode   = mode;
-    const total       = mode === 'vocab' ? this.vocabQuestions.length : this.gameWords.length;
-    const correct     = mode === 'vocab'
-      ? this.vocabResults.filter(Boolean).length
-      : Math.round(this.gameScore / 10);
-    const score       = mode === 'vocab' ? this.vocabScore : this.gameScore;
-    const xpGain      = Math.round(score * 0.5 + correct * 5);
-    const acc         = Math.round((correct / total) * 100);
+    this.resultMode = mode;
+    const total   = mode === 'vocab' ? this.vocabQuestions.length : this.gameWords.length;
+    const correct = mode === 'vocab' ? this.vocabResults.filter(Boolean).length : Math.round(this.gameScore / 10);
+    const score   = mode === 'vocab' ? this.vocabScore : this.gameScore;
+    const xpGain  = Math.round(score * 0.5 + correct * 5);
+    const acc     = Math.round((correct / total) * 100);
 
-    this.xp    += xpGain;
+    this.xp += xpGain;
     this.streak = Math.min(this.streak + 1, 7);
     this.saveState();
 
-    const titles   = ['Perlu Latihan Lagi', 'Lumayan!', 'Bagus!', 'Luar Biasa!', 'Sempurna!'];
-    const trophies = ['😅', '😊', '👍', '🎉', '🏆'];
+    const titles   = ['Perlu Latihan Lagi','Lumayan!','Bagus!','Luar Biasa!','Sempurna!'];
+    const trophies = ['😅','😊','👍','🎉','🏆'];
     const ti       = Math.min(Math.floor(acc / 25), 4);
     const reward   = [...this.rewards].filter(r => acc >= r.min).pop()!;
 
@@ -459,12 +479,179 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.resultXp         = `+${xpGain}`;
     this.resultAccuracy   = `${acc}%`;
     this.resultReward     = `${reward.icon} Reward: ${reward.name}`;
-
-    this.currentScreen = 'result';
+    this.currentScreen    = 'result';
   }
 
   replayMode() {
     if (this.resultMode === 'vocab') this.startVocab();
     else this.startGame();
+  }
+
+  // ─── Generate Soal via Groq ────────────────────────────────────
+  async generateNewQuestions() {
+    if (this.isGenerating) {
+      await this.showToast('Sedang proses...', 'warning');
+      return;
+    }
+    if (this.generateCooldownSec > 0) {
+      await this.showToast(`Tunggu ${this.generateCooldownSec}s lagi`, 'warning');
+      return;
+    }
+    if (this.allVocabPool.length >= this.MAX_VOCAB_POOL) {
+      await this.showToast('Pool soal sudah penuh!', 'warning');
+      return;
+    }
+
+    const alert = await this.alertCtrl.create({
+      header: '✨ Generate Soal dengan AI',
+      subHeader: 'Powered by Groq (Llama 3.1)',
+      inputs: [{ name: 'topic', type: 'text', placeholder: 'Topik: Animals, Food, Family...' }],
+      buttons: [
+        { text: 'Batal', role: 'cancel' },
+        { text: 'Generate', handler: (d) => this.doGenerate(d.topic) }
+      ]
+    });
+    await alert.present();
+  }
+
+  private async doGenerate(topic: string) {
+    this.isGenerating = true;
+    const loading = await this.loadingCtrl.create({
+      message: 'Membuat soal vocab... (1/2)',
+      spinner: 'crescent'
+    });
+    await loading.present();
+
+    try {
+      // ── Request 1: Vocab ──────────────────────────────────────
+      console.log('[Generate] Memulai request vocab, topik:', topic || 'umum');
+      const newVocab = await this.gemini.generateVocabQuestions(topic).toPromise();
+      console.log('[Generate] Response vocab:', newVocab);
+
+      if (newVocab?.length) {
+        const available = this.MAX_VOCAB_POOL - this.allVocabPool.length;
+        const toAdd = newVocab.slice(0, available).map(v => ({
+          word: v.word,
+          phonetic: v.phonetic,
+          example: v.example,
+          answer: v.answer,
+          choices: v.choices
+        }));
+        this.allVocabPool = [...this.allVocabPool, ...toAdd];
+        console.log('[Generate] Vocab ditambahkan:', toAdd.length, '| Total:', this.allVocabPool.length);
+      } else {
+        console.warn('[Generate] Response vocab kosong atau null');
+      }
+
+      // ── Jeda 3 detik sebelum request ke-2 ────────────────────
+      if (this.allGamePool.length < this.MAX_GAME_POOL) {
+        loading.message = 'Membuat kata game... (2/2)';
+        await new Promise(r => setTimeout(r, this.REQUEST_DELAY_MS));
+
+        // ── Request 2: Game Words ─────────────────────────────
+        console.log('[Generate] Memulai request game words');
+        const newGames = await this.gemini.generateGameWords(topic).toPromise();
+        console.log('[Generate] Response game:', newGames);
+
+        if (newGames?.length) {
+          const available = this.MAX_GAME_POOL - this.allGamePool.length;
+          const toAdd = newGames.slice(0, available).map(g => ({
+            indo: g.indo,
+            eng: g.eng,
+            hint: g.hint
+          }));
+          this.allGamePool = [...this.allGamePool, ...toAdd];
+          console.log('[Generate] Game ditambahkan:', toAdd.length, '| Total:', this.allGamePool.length);
+        } else {
+          console.warn('[Generate] Response game kosong atau null');
+        }
+      }
+
+      // ✅ Simpan ke localStorage
+      this.savePools();
+
+      await loading.dismiss();
+      this.startCooldown(15);
+
+      // ✅ FIX: Tawaran langsung main setelah generate berhasil
+      const playAlert = await this.alertCtrl.create({
+        header: '✅ Soal Baru Siap!',
+        message: `📚 Vocab pool: ${this.allVocabPool.length} soal\n🎮 Game pool: ${this.allGamePool.length} kata\n\nMau langsung main sekarang?`,
+        buttons: [
+          {
+            text: 'Nanti',
+            role: 'cancel'
+          },
+          {
+            text: '📖 Tebak Arti',
+            handler: () => {
+              // ✅ loadSavedPools dipanggil di dalam startVocab()
+              this.startVocab();
+            }
+          },
+          {
+            text: '🎮 Susun Kata',
+            handler: () => {
+              // ✅ loadSavedPools dipanggil di dalam startGame()
+              this.startGame();
+            }
+          }
+        ]
+      });
+      await playAlert.present();
+
+    } catch (error: any) {
+      await loading.dismiss();
+      console.error('[Generate] Error:', error);
+
+      if (error.status === 429) {
+        await this.showToast('⚠️ Rate limit Groq. Tunggu sebentar lalu coba lagi.', 'warning');
+        this.startCooldown(30);
+      } else if (error.status === 401) {
+        await this.showToast('❌ API Key Groq tidak valid. Periksa konfigurasi.', 'danger');
+      } else if (error instanceof SyntaxError) {
+        await this.showToast('⚠️ Format JSON dari AI tidak valid. Coba lagi.', 'warning');
+      } else {
+        await this.showToast('❌ Gagal generate soal. Periksa koneksi internet.', 'danger');
+      }
+    } finally {
+      this.isGenerating = false;
+    }
+  }
+
+  private startCooldown(seconds: number) {
+    this.generateCooldownSec = seconds;
+    this.clearCooldownTimer();
+    this.cooldownTimer = setInterval(() => {
+      this.generateCooldownSec--;
+      if (this.generateCooldownSec <= 0) this.clearCooldownTimer();
+    }, 1000);
+  }
+
+  private clearCooldownTimer() {
+    if (this.cooldownTimer) {
+      clearInterval(this.cooldownTimer);
+      this.cooldownTimer = null;
+    }
+  }
+
+  get generateButtonLabel(): string {
+    if (this.isGenerating) return '⏳ Generating...';
+    if (this.generateCooldownSec > 0) return `⏱ Cooldown ${this.generateCooldownSec}s`;
+    return '✨ Generate Soal Baru dengan AI';
+  }
+
+  get isGenerateDisabled(): boolean {
+    return this.isGenerating || this.generateCooldownSec > 0;
+  }
+
+  private async showToast(message: string, color: 'success' | 'danger' | 'warning') {
+    const t = await this.toastCtrl.create({
+      message,
+      duration: 3000,
+      color,
+      position: 'top'
+    });
+    await t.present();
   }
 }
