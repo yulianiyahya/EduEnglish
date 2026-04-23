@@ -42,6 +42,14 @@
           </div>
         </div>
 
+        <!-- Tombol Generate Soal dengan AI -->
+    <ion-button
+      (click)="generateNewQuestions()"
+      [disabled]="isGenerateDisabled"
+      expand="block">
+      {{ generateButtonLabel }}
+    </ion-button>
+
         <p class="section-title">Mode Belajar</p>
         <div class="menu-grid">
           <div class="menu-card" (click)="startVocab()">

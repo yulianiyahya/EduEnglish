@@ -3,6 +3,9 @@ import { IonicModule, AlertController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 
 interface Level {
   name: string;
@@ -23,6 +26,7 @@ export class ProfilPage implements OnInit {
   // ─── Data Pengguna ──────────────────────────────────
   userName: string = '';
   userInitials: string = '';
+  profileImage: string | null = null; // base64 atau path
   totalXP: number = 0;
   totalCorrect: number = 0;
   totalQuestions: number = 0;
@@ -30,7 +34,7 @@ export class ProfilPage implements OnInit {
   dailyTarget: number = 10;
   notifActive: boolean = true;
 
-  // ─── Level System (DISINKRONKAN dengan dashboard) ───
+  // ─── Level System ───────────────────────────────────
   levels: Level[] = [
     { name: 'Pemula',   minXP: 0,    maxXP: 100,  badge: '🌱 Level 1' },
     { name: 'Dasar',    minXP: 100,  maxXP: 250,  badge: '📗 Level 2' },
@@ -42,21 +46,22 @@ export class ProfilPage implements OnInit {
 
   constructor(
     private router: Router,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
     this.loadUserData();
+    this.loadProfileImage();
   }
 
-  // Reload data setiap kali halaman dikunjungi
   ionViewWillEnter() {
     this.loadUserData();
+    this.loadProfileImage();
   }
 
   // ─── Load data dari localStorage ────────────────────
   private loadUserData() {
-    // Nama user
     const savedName = localStorage.getItem('userName');
     const email = localStorage.getItem('email');
     if (savedName) {
@@ -68,18 +73,15 @@ export class ProfilPage implements OnInit {
       this.updateInitials(nameFromEmail);
     }
 
-    // Statistik — KEY SAMA dengan dashboard.page.ts
     this.totalXP        = Number(localStorage.getItem('eng_xp'))      || 0;
     this.streakDays     = Number(localStorage.getItem('eng_streak'))   || 0;
     this.totalCorrect   = Number(localStorage.getItem('eng_correct'))  || 0;
     this.totalQuestions = Number(localStorage.getItem('eng_total'))    || 0;
 
-    // Target harian
     const savedTarget = localStorage.getItem('dailyTarget');
     if (savedTarget) this.dailyTarget = parseInt(savedTarget);
   }
 
-  // ─── Update inisial dari nama ────────────────────────
   private updateInitials(name: string) {
     const parts = name.trim().split(' ');
     if (parts.length >= 2) {
@@ -89,21 +91,65 @@ export class ProfilPage implements OnInit {
     }
   }
 
-  get currentLevel(): Level {
-    return (
-      this.levels.find(l => this.totalXP >= l.minXP && this.totalXP < l.maxXP)
-      || this.levels[this.levels.length - 1]
-    );
+  // ─── Foto Profil ─────────────────────────────────────
+  private async loadProfileImage() {
+    const savedImage = localStorage.getItem('profile_image');
+    if (savedImage) {
+      this.profileImage = savedImage;
+    }
   }
 
-  get levelProgress(): number {
-    const lvl = this.currentLevel;
-    return Math.round(((this.totalXP - lvl.minXP) / (lvl.maxXP - lvl.minXP)) * 100);
+  private saveProfileImage(base64Data: string) {
+    localStorage.setItem('profile_image', base64Data);
+    this.profileImage = base64Data;
   }
 
-  get accuracy(): number {
-    if (this.totalQuestions === 0) return 0;
-    return Math.round((this.totalCorrect / this.totalQuestions) * 100);
+  async changeProfilePhoto() {
+    const alert = await this.alertCtrl.create({
+      header: 'Foto Profil',
+      message: 'Pilih sumber gambar',
+      buttons: [
+        {
+          text: 'Kamera',
+          handler: () => this.takePhoto(CameraSource.Camera)
+        },
+        {
+          text: 'Galeri',
+          handler: () => this.takePhoto(CameraSource.Photos)
+        },
+        {
+          text: 'Hapus Foto',
+          role: 'destructive',
+          handler: () => {
+            localStorage.removeItem('profile_image');
+            this.profileImage = null;
+          }
+        },
+        {
+          text: 'Batal',
+          role: 'cancel'
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  private async takePhoto(source: CameraSource) {
+    try {
+      const image = await Camera.getPhoto({
+        quality: 70,
+        allowEditing: true,
+        resultType: CameraResultType.Base64, // base64 langsung
+        source: source
+      });
+
+      if (image && image.base64String) {
+        const base64Data = `data:image/jpeg;base64,${image.base64String}`;
+        this.saveProfileImage(base64Data);
+      }
+    } catch (error) {
+      console.error('Gagal mengambil foto', error);
+    }
   }
 
   // ─── Edit Profil (nama) ──────────────────────────────
@@ -119,10 +165,7 @@ export class ProfilPage implements OnInit {
         }
       ],
       buttons: [
-        {
-          text: 'Batal',
-          role: 'cancel'
-        },
+        { text: 'Batal', role: 'cancel' },
         {
           text: 'Simpan',
           handler: (data): boolean => {
@@ -152,10 +195,7 @@ export class ProfilPage implements OnInit {
         }
       ],
       buttons: [
-        {
-          text: 'Batal',
-          role: 'cancel'
-        },
+        { text: 'Batal', role: 'cancel' },
         {
           text: 'Simpan',
           handler: (data): boolean => {
@@ -181,20 +221,34 @@ export class ProfilPage implements OnInit {
       header: 'Keluar',
       message: 'Apakah kamu yakin ingin keluar?',
       buttons: [
-        {
-          text: 'Batal',
-          role: 'cancel'
-        },
+        { text: 'Batal', role: 'cancel' },
         {
           text: 'Keluar',
           role: 'destructive',
           handler: () => {
-            localStorage.clear();
-            this.router.navigateByUrl('/home', { replaceUrl: true });
+            this.authService.logout(); // sudah menggunakan logout yang benar
           }
         }
       ]
     });
     await alert.present();
+  }
+
+  // ─── Getter untuk level ──────────────────────────────
+  get currentLevel(): Level {
+    return (
+      this.levels.find(l => this.totalXP >= l.minXP && this.totalXP < l.maxXP)
+      || this.levels[this.levels.length - 1]
+    );
+  }
+
+  get levelProgress(): number {
+    const lvl = this.currentLevel;
+    return Math.round(((this.totalXP - lvl.minXP) / (lvl.maxXP - lvl.minXP)) * 100);
+  }
+
+  get accuracy(): number {
+    if (this.totalQuestions === 0) return 0;
+    return Math.round((this.totalCorrect / this.totalQuestions) * 100);
   }
 }
