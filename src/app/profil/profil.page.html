@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar color="primary">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/home" text="Kembali"></ion-back-button>
+      <ion-back-button defaultHref="/dashboard" text="Kembali"></ion-back-button>
     </ion-buttons>
     <ion-title>Profil</ion-title>
   </ion-toolbar>
@@ -10,14 +10,19 @@
 <ion-content [fullscreen]="true">
   <div class="profil-wrapper">
 
-    <!-- Header -->
+    <!-- Header dengan Foto Profil -->
     <div class="profil-header">
-      <div class="avatar-ring">
-        <span class="avatar-initials">{{ userInitials }}</span>
+      <div class="avatar-ring" (click)="changeProfilePhoto()">
+        <!-- Tampilkan foto jika ada, jika tidak tampilkan inisial -->
+        <img *ngIf="profileImage" [src]="profileImage" class="profile-img" alt="Foto Profil">
+        <span *ngIf="!profileImage" class="avatar-initials">{{ userInitials }}</span>
+        <div class="camera-overlay">
+          <ion-icon name="camera-outline"></ion-icon>
+        </div>
       </div>
       <p class="profil-name">{{ userName }}</p>
       <p class="profil-level">
-        <span>Pelajar Aktif</span>
+        <span>{{ currentLevel.name }}</span>
         <span class="level-badge">{{ currentLevel.badge }}</span>
       </p>
       <div class="stats-row">
@@ -36,7 +41,7 @@
       </div>
     </div>
 
-    <!-- Body -->
+    <!-- Body (sama seperti sebelumnya) -->
     <div class="profil-body">
 
       <!-- Progres Level -->
@@ -49,6 +54,9 @@
           </div>
           <div class="xp-bar-bg">
             <div class="xp-bar-fill" [style.width.%]="levelProgress"></div>
+          </div>
+          <div class="next-level-info" *ngIf="currentLevel.maxXP !== 99999">
+            <small>{{ currentLevel.maxXP - totalXP }} XP menuju level berikutnya</small>
           </div>
         </div>
       </ion-card>
@@ -86,7 +94,7 @@
 
       </ion-card>
 
-      <!-- Statistik -->
+      <!-- Statistik Belajar -->
       <p class="section-label">Statistik Belajar</p>
       <ion-card class="profil-card">
 
