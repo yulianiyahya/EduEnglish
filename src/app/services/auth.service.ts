@@ -13,11 +13,21 @@ export interface AuthUser {
   email: string;
 }
 
+export interface UserProgress {
+  xp: number;
+  streak: number;
+  totalCorrect: number;
+  totalAnswered: number;
+  lastPlayed: string | null;
+  vocabPool: any[] | null;
+  gamePool: any[] | null;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly USERS_KEY = 'auth_users';
+  private readonly USERS_KEY   = 'auth_users';
   private readonly SESSION_KEY = 'auth_session';
 
   constructor(private router: Router) {
@@ -35,13 +45,50 @@ export class AuthService {
     return btoa(salted);
   }
 
+  // ✅ Key progress per akun berdasarkan email
+  private progressKey(email: string): string {
+    return `progress_${email.toLowerCase().trim()}`;
+  }
+
+  // ✅ Simpan progress akun tertentu
+  saveProgressForUser(email: string, progress: UserProgress): void {
+    try {
+      localStorage.setItem(this.progressKey(email), JSON.stringify(progress));
+      console.log('[AuthService] Progress disimpan untuk:', email);
+    } catch (e) {
+      console.error('[AuthService] Gagal simpan progress:', e);
+    }
+  }
+
+  // ✅ Load progress akun tertentu (return null jika belum ada = akun baru)
+  loadProgressForUser(email: string): UserProgress | null {
+    try {
+      const raw = localStorage.getItem(this.progressKey(email));
+      if (!raw) return null;
+      return JSON.parse(raw) as UserProgress;
+    } catch (e) {
+      console.error('[AuthService] Gagal load progress:', e);
+      return null;
+    }
+  }
+
+  // ✅ Hapus key global lama agar tidak bocor antar akun
+  private clearGlobalProgressKeys(): void {
+    const oldKeys = [
+      'eng_xp', 'eng_streak', 'eng_correct',
+      'eng_total', 'eng_last_played',
+      'vocab_pool', 'game_pool',
+    ];
+    oldKeys.forEach(k => localStorage.removeItem(k));
+  }
+
   private getUsers(): UserAccount[] {
     try {
       const raw = localStorage.getItem(this.USERS_KEY);
       if (!raw) return [];
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) {
-        console.error('[AuthService] Data auth_users corrupt (bukan array), akan direset');
+        console.error('[AuthService] Data auth_users corrupt, direset');
         return [];
       }
       return parsed;
@@ -52,19 +99,12 @@ export class AuthService {
   }
 
   private saveUsers(users: UserAccount[]): void {
-    if (!Array.isArray(users)) {
-      console.error('[AuthService] saveUsers gagal: parameter bukan array', users);
+    if (!Array.isArray(users) || users.length === 0) {
+      console.warn('[AuthService] saveUsers dibatalkan');
       return;
     }
-    if (users.length === 0) {
-      console.warn('[AuthService] Mencoba menyimpan array kosong! Abaikan.');
-      return;
-    }
-    const toStore = JSON.stringify(users);
-    localStorage.setItem(this.USERS_KEY, toStore);
-    console.log('[AuthService] saveUsers() - menyimpan', users.length, 'user(s)');
-    const saved = localStorage.getItem(this.USERS_KEY);
-    console.log('[AuthService] Verifikasi setelah simpan:', saved);
+    localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
+    console.log('[AuthService] saveUsers() -', users.length, 'user(s)');
   }
 
   public resetAllUsers(): void {
@@ -74,7 +114,7 @@ export class AuthService {
 
   register(nama: string, email: string, password: string): { success: boolean; message: string } {
     console.log('[AuthService] Register dipanggil untuk email:', email);
-    let users = this.getUsers();
+    const users = this.getUsers();
 
     const exists = users.some((u) => u.email.toLowerCase() === email.toLowerCase());
     if (exists) {
@@ -90,6 +130,19 @@ export class AuthService {
 
     users.push(newUser);
     this.saveUsers(users);
+
+    // ✅ Inisialisasi progress kosong untuk akun baru
+    const emptyProgress: UserProgress = {
+      xp: 0,
+      streak: 0,
+      totalCorrect: 0,
+      totalAnswered: 0,
+      lastPlayed: null,
+      vocabPool: null,
+      gamePool: null,
+    };
+    this.saveProgressForUser(newUser.email, emptyProgress);
+
     return { success: true, message: 'Akun berhasil dibuat!' };
   }
 
@@ -114,16 +167,19 @@ export class AuthService {
     localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
     localStorage.setItem('email', user.email);
     localStorage.setItem('userName', user.nama);
+
+    // ✅ Bersihkan key global lama supaya tidak bocor ke akun lain
+    this.clearGlobalProgressKeys();
+
+    console.log('[AuthService] Login sukses:', user.email);
     return { success: true, message: `Selamat datang, ${user.nama}!` };
   }
 
-  // ✅ NEW: Cek apakah email sudah terdaftar (untuk forgot password)
   isEmailRegistered(email: string): boolean {
     const users = this.getUsers();
     return users.some(u => u.email.toLowerCase() === email.toLowerCase().trim());
   }
 
-  // ✅ NEW: Reset password berdasarkan email
   resetPassword(email: string, newPassword: string): { success: boolean; message: string } {
     const users = this.getUsers();
     const idx = users.findIndex(u => u.email.toLowerCase() === email.toLowerCase().trim());
@@ -138,11 +194,19 @@ export class AuthService {
     return { success: true, message: 'Password berhasil diperbarui.' };
   }
 
+  // ✅ FIX: Logout hanya hapus session & key global.
+  //    Progress per-akun (progress_email@...) tetap tersimpan.
   logout(): void {
     console.log('[AuthService] Logout dipanggil');
+
     localStorage.removeItem(this.SESSION_KEY);
     localStorage.removeItem('email');
     localStorage.removeItem('userName');
+
+    // Hapus key global saja, bukan per-akun
+    this.clearGlobalProgressKeys();
+
+    console.log('[AuthService] Logout selesai');
     this.router.navigateByUrl('/login', { replaceUrl: true });
   }
 
@@ -187,9 +251,16 @@ export class AuthService {
 
   private checkStorageIntegrity(): void {
     const raw = localStorage.getItem(this.USERS_KEY);
-    if (raw && !Array.isArray(JSON.parse(raw))) {
-      console.error('[AuthService] Storage corrupt, reset!');
-      localStorage.removeItem(this.USERS_KEY);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) {
+          console.error('[AuthService] Storage corrupt, reset!');
+          localStorage.removeItem(this.USERS_KEY);
+        }
+      } catch {
+        localStorage.removeItem(this.USERS_KEY);
+      }
     }
   }
 
