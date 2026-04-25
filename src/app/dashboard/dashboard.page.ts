@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { GeminiService, GeneratedVocab, GeneratedGame } from '../services/gemini.service';
 import { AlertController, LoadingController, ToastController } from '@ionic/angular';
 import { RouterModule, Router } from '@angular/router';
+import { AuthService, UserProgress } from '../services/auth.service';
 
 export interface VocabQuestion {
   word: string;
@@ -125,6 +126,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     { word: 'MILK',      phonetic: '/mɪlk/',        example: '"Drink a glass of milk every day."',  answer: 'Susu',                choices: ['Susu','Jus','Teh','Kopi']                         },
   ];
 
+  private readonly defaultVocabPool: VocabQuestion[] = [...this.allVocabPool];
+
   private allGamePool: GameWord[] = [
     { indo: 'Kucing',   eng: 'CAT',      hint: '3 huruf, hewan peliharaan'         },
     { indo: 'Anjing',   eng: 'DOG',      hint: '3 huruf, sahabat manusia'          },
@@ -168,6 +171,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     { indo: 'Susu',     eng: 'MILK',     hint: '4 huruf, minuman dari sapi'        },
     { indo: 'Air',      eng: 'WATER',    hint: '5 huruf, minuman paling penting'   },
   ];
+
+  private readonly defaultGamePool: GameWord[] = [...this.allGamePool];
 
   vocabQuestions: VocabQuestion[] = [];
   gameWords: GameWord[] = [];
@@ -215,20 +220,18 @@ export class DashboardPage implements OnInit, OnDestroy {
     private gemini: GeminiService,
     private alertCtrl: AlertController,
     private loadingCtrl: LoadingController,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private authService: AuthService,
   ) {}
 
   ngOnInit() {
     this.loadUserName();
     this.loadState();
-    this.loadSavedPools();
   }
 
   ionViewWillEnter() {
     this.loadUserName();
     this.loadState();
-    // ✅ FIX: Selalu reload pool saat halaman ditampilkan
-    this.loadSavedPools();
   }
 
   ngOnDestroy() {
@@ -236,73 +239,82 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.clearCooldownTimer();
   }
 
-  // ─── Pool ─────────────────────────────────────────────────────
-  private loadSavedPools() {
-    try {
-      const v = localStorage.getItem('vocab_pool');
-      if (v) {
-        const p = JSON.parse(v);
-        if (Array.isArray(p) && p.length) {
-          this.allVocabPool = p;
-          console.log('[Pool] vocab_pool loaded:', p.length, 'soal');
-        }
-      }
-    } catch (e) {
-      console.error('[Pool] Gagal load vocab_pool:', e);
-    }
-    try {
-      const g = localStorage.getItem('game_pool');
-      if (g) {
-        const p = JSON.parse(g);
-        if (Array.isArray(p) && p.length) {
-          this.allGamePool = p;
-          console.log('[Pool] game_pool loaded:', p.length, 'kata');
-        }
-      }
-    } catch (e) {
-      console.error('[Pool] Gagal load game_pool:', e);
-    }
+  // ✅ Ambil email user yang sedang login
+  private getCurrentEmail(): string {
+    return localStorage.getItem('email') || '';
   }
 
-  private savePools() {
-    try {
-      localStorage.setItem('vocab_pool', JSON.stringify(this.allVocabPool));
-      localStorage.setItem('game_pool', JSON.stringify(this.allGamePool));
-      console.log('[Pool] Saved — vocab:', this.allVocabPool.length, '| game:', this.allGamePool.length);
-    } catch (e) {
-      console.error('[Pool] Gagal menyimpan pool:', e);
-    }
-  }
-
-  private getRandomQuestions<T>(pool: T[], count: number): T[] {
-    if (!pool.length) return [];
-    const s = [...pool];
-    for (let i = s.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [s[i], s[j]] = [s[j], s[i]];
-    }
-    return s.slice(0, Math.min(count, s.length));
-  }
-
-  private loadUserName() {
-    const n = localStorage.getItem('userName');
-    const e = localStorage.getItem('email');
-    if (n) this.nama = n;
-    else if (e) this.nama = e.split('@')[0];
-  }
-
+  // ✅ loadState: baca progress dari key per-akun
   loadState() {
-    this.xp            = Number(localStorage.getItem('eng_xp'))      || 0;
-    this.streak        = Number(localStorage.getItem('eng_streak'))   || 0;
-    this.totalCorrect  = Number(localStorage.getItem('eng_correct'))  || 0;
-    this.totalAnswered = Number(localStorage.getItem('eng_total'))    || 0;
+    const email = this.getCurrentEmail();
+    if (!email) return;
+
+    const progress = this.authService.loadProgressForUser(email);
+
+    if (progress) {
+      this.xp            = progress.xp           ?? 0;
+      this.streak        = progress.streak        ?? 0;
+      this.totalCorrect  = progress.totalCorrect  ?? 0;
+      this.totalAnswered = progress.totalAnswered ?? 0;
+
+      // Load pool per-akun jika ada, fallback ke default
+      if (progress.vocabPool && Array.isArray(progress.vocabPool) && progress.vocabPool.length) {
+        this.allVocabPool = progress.vocabPool;
+      } else {
+        this.allVocabPool = [...this.defaultVocabPool];
+      }
+
+      if (progress.gamePool && Array.isArray(progress.gamePool) && progress.gamePool.length) {
+        this.allGamePool = progress.gamePool;
+      } else {
+        this.allGamePool = [...this.defaultGamePool];
+      }
+
+      // ✅ Cek streak expired (skip > 1 hari = reset)
+      if (progress.lastPlayed) {
+        const last = new Date(progress.lastPlayed);
+        const today = new Date();
+        const lastDate  = new Date(last.getFullYear(),  last.getMonth(),  last.getDate());
+        const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const diffDays  = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays > 1) {
+          console.log('[Streak] Expired! diffDays:', diffDays, '→ reset ke 0');
+          this.streak = 0;
+        }
+      }
+
+      console.log('[Dashboard] Progress loaded untuk:', email, '| XP:', this.xp, '| Streak:', this.streak);
+    } else {
+      // Akun baru — mulai dari nol
+      this.xp            = 0;
+      this.streak        = 0;
+      this.totalCorrect  = 0;
+      this.totalAnswered = 0;
+      this.allVocabPool  = [...this.defaultVocabPool];
+      this.allGamePool   = [...this.defaultGamePool];
+      console.log('[Dashboard] Akun baru, progress dimulai dari 0');
+    }
   }
 
+  // ✅ saveState: simpan progress ke key per-akun
   saveState() {
-    localStorage.setItem('eng_xp',      String(this.xp));
-    localStorage.setItem('eng_streak',  String(this.streak));
-    localStorage.setItem('eng_correct', String(this.totalCorrect));
-    localStorage.setItem('eng_total',   String(this.totalAnswered));
+    const email = this.getCurrentEmail();
+    if (!email) return;
+
+    const today = new Date();
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    const progress: UserProgress = {
+      xp:            this.xp,
+      streak:        this.streak,
+      totalCorrect:  this.totalCorrect,
+      totalAnswered: this.totalAnswered,
+      lastPlayed:    todayDate.toISOString(),
+      vocabPool:     this.allVocabPool,
+      gamePool:      this.allGamePool,
+    };
+
+    this.authService.saveProgressForUser(email, progress);
   }
 
   // ─── Level helpers ─────────────────────────────────────────────
@@ -324,15 +336,20 @@ export class DashboardPage implements OnInit, OnDestroy {
     }));
   }
 
+  private loadUserName() {
+    const n = localStorage.getItem('userName');
+    const e = localStorage.getItem('email');
+    if (n) this.nama = n;
+    else if (e) this.nama = e.split('@')[0];
+  }
+
   // ─── Navigation ────────────────────────────────────────────────
   showHome()   { this.clearTimer(); this.currentScreen = 'home'; }
   goToProfil() { this.router.navigate(['/profil']); }
-  logout()     { localStorage.removeItem('email'); this.router.navigate(['/login']); }
+  logout()     { this.authService.logout(); }
 
   // ─── Vocab Quiz ───────────────────────────────────────────────
   startVocab() {
-    // ✅ FIX: Selalu reload pool terbaru dari localStorage sebelum mulai
-    this.loadSavedPools();
     this.vocabQuestions = this.getRandomQuestions(this.allVocabPool, 10);
     if (!this.vocabQuestions.length) {
       this.showToast('Belum ada soal!', 'warning');
@@ -381,8 +398,6 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   // ─── Word Game ────────────────────────────────────────────────
   startGame() {
-    // ✅ FIX: Selalu reload pool terbaru dari localStorage sebelum mulai
-    this.loadSavedPools();
     this.gameWords = this.getRandomQuestions(this.allGamePool, 8);
     if (!this.gameWords.length) {
       this.showToast('Belum ada kata game!', 'warning');
@@ -454,6 +469,16 @@ export class DashboardPage implements OnInit, OnDestroy {
     else this.loadGameQuestion();
   }
 
+  private getRandomQuestions<T>(pool: T[], count: number): T[] {
+    if (!pool.length) return [];
+    const s = [...pool];
+    for (let i = s.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [s[i], s[j]] = [s[j], s[i]];
+    }
+    return s.slice(0, Math.min(count, s.length));
+  }
+
   // ─── Result ────────────────────────────────────────────────────
   showResult(mode: 'vocab' | 'game') {
     this.resultMode = mode;
@@ -464,7 +489,31 @@ export class DashboardPage implements OnInit, OnDestroy {
     const acc     = Math.round((correct / total) * 100);
 
     this.xp += xpGain;
-    this.streak = Math.min(this.streak + 1, 7);
+
+    // ✅ FIX: Streak hanya naik jika hari ini belum pernah main
+    const email = this.getCurrentEmail();
+    const savedProgress = this.authService.loadProgressForUser(email);
+    const lastPlayed = savedProgress?.lastPlayed ?? null;
+
+    const today = new Date();
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    if (lastPlayed) {
+      const last = new Date(lastPlayed);
+      const lastDate = new Date(last.getFullYear(), last.getMonth(), last.getDate());
+      const isSameDay = todayDate.getTime() === lastDate.getTime();
+
+      if (!isSameDay) {
+        this.streak = Math.min(this.streak + 1, 7);
+        console.log('[Streak] Hari baru! Streak naik →', this.streak);
+      } else {
+        console.log('[Streak] Sudah main hari ini. Streak tetap:', this.streak);
+      }
+    } else {
+      this.streak = 1;
+      console.log('[Streak] Pertama kali main! Streak:', this.streak);
+    }
+
     this.saveState();
 
     const titles   = ['Perlu Latihan Lagi','Lumayan!','Bagus!','Luar Biasa!','Sempurna!'];
@@ -523,79 +572,45 @@ export class DashboardPage implements OnInit, OnDestroy {
     await loading.present();
 
     try {
-      // ── Request 1: Vocab ──────────────────────────────────────
       console.log('[Generate] Memulai request vocab, topik:', topic || 'umum');
       const newVocab = await this.gemini.generateVocabQuestions(topic).toPromise();
-      console.log('[Generate] Response vocab:', newVocab);
 
       if (newVocab?.length) {
         const available = this.MAX_VOCAB_POOL - this.allVocabPool.length;
         const toAdd = newVocab.slice(0, available).map(v => ({
-          word: v.word,
-          phonetic: v.phonetic,
-          example: v.example,
-          answer: v.answer,
-          choices: v.choices
+          word: v.word, phonetic: v.phonetic, example: v.example,
+          answer: v.answer, choices: v.choices
         }));
         this.allVocabPool = [...this.allVocabPool, ...toAdd];
-        console.log('[Generate] Vocab ditambahkan:', toAdd.length, '| Total:', this.allVocabPool.length);
-      } else {
-        console.warn('[Generate] Response vocab kosong atau null');
       }
 
-      // ── Jeda 3 detik sebelum request ke-2 ────────────────────
       if (this.allGamePool.length < this.MAX_GAME_POOL) {
         loading.message = 'Membuat kata game... (2/2)';
         await new Promise(r => setTimeout(r, this.REQUEST_DELAY_MS));
 
-        // ── Request 2: Game Words ─────────────────────────────
-        console.log('[Generate] Memulai request game words');
         const newGames = await this.gemini.generateGameWords(topic).toPromise();
-        console.log('[Generate] Response game:', newGames);
-
         if (newGames?.length) {
           const available = this.MAX_GAME_POOL - this.allGamePool.length;
           const toAdd = newGames.slice(0, available).map(g => ({
-            indo: g.indo,
-            eng: g.eng,
-            hint: g.hint
+            indo: g.indo, eng: g.eng, hint: g.hint
           }));
           this.allGamePool = [...this.allGamePool, ...toAdd];
-          console.log('[Generate] Game ditambahkan:', toAdd.length, '| Total:', this.allGamePool.length);
-        } else {
-          console.warn('[Generate] Response game kosong atau null');
         }
       }
 
-      // ✅ Simpan ke localStorage
-      this.savePools();
+      // ✅ Simpan pool ke progress per-akun
+      this.saveState();
 
       await loading.dismiss();
       this.startCooldown(15);
 
-      // ✅ FIX: Tawaran langsung main setelah generate berhasil
       const playAlert = await this.alertCtrl.create({
         header: '✅ Soal Baru Siap!',
         message: `📚 Vocab pool: ${this.allVocabPool.length} soal\n🎮 Game pool: ${this.allGamePool.length} kata\n\nMau langsung main sekarang?`,
         buttons: [
-          {
-            text: 'Nanti',
-            role: 'cancel'
-          },
-          {
-            text: '📖 Tebak Arti',
-            handler: () => {
-              // ✅ loadSavedPools dipanggil di dalam startVocab()
-              this.startVocab();
-            }
-          },
-          {
-            text: '🎮 Susun Kata',
-            handler: () => {
-              // ✅ loadSavedPools dipanggil di dalam startGame()
-              this.startGame();
-            }
-          }
+          { text: 'Nanti', role: 'cancel' },
+          { text: '📖 Tebak Arti', handler: () => { this.startVocab(); } },
+          { text: '🎮 Susun Kata', handler: () => { this.startGame(); } }
         ]
       });
       await playAlert.present();
@@ -603,12 +618,11 @@ export class DashboardPage implements OnInit, OnDestroy {
     } catch (error: any) {
       await loading.dismiss();
       console.error('[Generate] Error:', error);
-
       if (error.status === 429) {
         await this.showToast('⚠️ Rate limit Groq. Tunggu sebentar lalu coba lagi.', 'warning');
         this.startCooldown(30);
       } else if (error.status === 401) {
-        await this.showToast('❌ API Key Groq tidak valid. Periksa konfigurasi.', 'danger');
+        await this.showToast('❌ API Key Groq tidak valid.', 'danger');
       } else if (error instanceof SyntaxError) {
         await this.showToast('⚠️ Format JSON dari AI tidak valid. Coba lagi.', 'warning');
       } else {
@@ -647,10 +661,7 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   private async showToast(message: string, color: 'success' | 'danger' | 'warning') {
     const t = await this.toastCtrl.create({
-      message,
-      duration: 3000,
-      color,
-      position: 'top'
+      message, duration: 3000, color, position: 'top'
     });
     await t.present();
   }

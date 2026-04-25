@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">EduEnglish</string>
+    <string name="title_activity_main">EduEnglish</string>
+    <string name="package_name">com.eduenglish.app</string>
+    <string name="custom_url_scheme">com.eduenglish.app</string>
+</resources>
