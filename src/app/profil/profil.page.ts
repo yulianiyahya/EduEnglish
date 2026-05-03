@@ -26,7 +26,7 @@ export class ProfilPage implements OnInit {
   // ─── Data Pengguna ──────────────────────────────────
   userName: string = '';
   userInitials: string = '';
-  profileImage: string | null = null; // base64 atau path
+  profileImage: string | null = null;
   totalXP: number = 0;
   totalCorrect: number = 0;
   totalQuestions: number = 0;
@@ -35,15 +35,18 @@ export class ProfilPage implements OnInit {
   notifActive: boolean = true;
 
   // ─── Level System ───────────────────────────────────
-  levels: Level[] = [
-    { name: 'Pemula',   minXP: 0,    maxXP: 100,  badge: '🌱 Level 1' },
-    { name: 'Dasar',    minXP: 100,  maxXP: 250,  badge: '📗 Level 2' },
-    { name: 'Menengah', minXP: 250,  maxXP: 500,  badge: '⭐ Level 3' },
-    { name: 'Mahir',    minXP: 500,  maxXP: 900,  badge: '🔥 Level 4' },
-    { name: 'Ahli',     minXP: 900,  maxXP: 1400, badge: '🏆 Level 5' },
-    { name: 'Master',   minXP: 1400, maxXP: 99999, badge: '💎 Level 6' },
-  ];
-
+levels: Level[] = [
+  { name: 'Pemula',      minXP: 0,     maxXP: 100,   badge: '🌱 Level 1'  },
+  { name: 'Dasar',       minXP: 100,   maxXP: 250,   badge: '📗 Level 2'  },
+  { name: 'Menengah',    minXP: 250,   maxXP: 500,   badge: '⭐ Level 3'  },
+  { name: 'Mahir',       minXP: 500,   maxXP: 900,   badge: '🔥 Level 4'  },
+  { name: 'Ahli',        minXP: 900,   maxXP: 1400,  badge: '🏆 Level 5'  },
+  { name: 'Master',      minXP: 1400,  maxXP: 2000,  badge: '💎 Level 6'  },
+  { name: 'Legend',      minXP: 2000,  maxXP: 3000,  badge: '🦁 Level 7'  },
+  { name: 'Grand Master',minXP: 3000,  maxXP: 5000,  badge: '👑 Level 8'  },
+  { name: 'Champion',    minXP: 5000,  maxXP: 8000,  badge: '🚀 Level 9'  },
+  { name: 'Mythic',      minXP: 8000,  maxXP: 99999, badge: '🌟 Level 10' },
+];
   constructor(
     private router: Router,
     private alertCtrl: AlertController,
@@ -60,10 +63,11 @@ export class ProfilPage implements OnInit {
     this.loadProfileImage();
   }
 
-  // ─── Load data dari localStorage ────────────────────
+  // ─── Load data dari progress per-akun ───────────────
   private loadUserData() {
     const savedName = localStorage.getItem('userName');
     const email = localStorage.getItem('email');
+
     if (savedName) {
       this.userName = savedName;
       this.updateInitials(savedName);
@@ -73,10 +77,16 @@ export class ProfilPage implements OnInit {
       this.updateInitials(nameFromEmail);
     }
 
-    this.totalXP        = Number(localStorage.getItem('eng_xp'))      || 0;
-    this.streakDays     = Number(localStorage.getItem('eng_streak'))   || 0;
-    this.totalCorrect   = Number(localStorage.getItem('eng_correct'))  || 0;
-    this.totalQuestions = Number(localStorage.getItem('eng_total'))    || 0;
+    // ✅ FIX: Baca dari progress per-akun (sama seperti dashboard)
+    if (email) {
+      const progress = this.authService.loadProgressForUser(email);
+      if (progress) {
+        this.totalXP        = progress.xp           ?? 0;
+        this.streakDays     = progress.streak        ?? 0;
+        this.totalCorrect   = progress.totalCorrect  ?? 0;
+        this.totalQuestions = progress.totalAnswered ?? 0;
+      }
+    }
 
     const savedTarget = localStorage.getItem('dailyTarget');
     if (savedTarget) this.dailyTarget = parseInt(savedTarget);
@@ -139,7 +149,7 @@ export class ProfilPage implements OnInit {
       const image = await Camera.getPhoto({
         quality: 70,
         allowEditing: true,
-        resultType: CameraResultType.Base64, // base64 langsung
+        resultType: CameraResultType.Base64,
         source: source
       });
 
@@ -226,7 +236,7 @@ export class ProfilPage implements OnInit {
           text: 'Keluar',
           role: 'destructive',
           handler: () => {
-            this.authService.logout(); // sudah menggunakan logout yang benar
+            this.authService.logout();
           }
         }
       ]
