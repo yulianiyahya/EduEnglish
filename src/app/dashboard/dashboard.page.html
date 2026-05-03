@@ -42,13 +42,12 @@
           </div>
         </div>
 
-        <!-- Tombol Generate Soal dengan AI -->
-    <ion-button
-      (click)="generateNewQuestions()"
-      [disabled]="isGenerateDisabled"
-      expand="block">
-      {{ generateButtonLabel }}
-    </ion-button>
+        <ion-button
+          (click)="generateNewQuestions()"
+          [disabled]="isGenerateDisabled"
+          expand="block">
+          {{ generateButtonLabel }}
+        </ion-button>
 
         <p class="section-title">Mode Belajar</p>
         <div class="menu-grid">
@@ -104,6 +103,11 @@
           <span class="q-score">Skor: {{ vocabScore }}</span>
         </div>
 
+        <!-- ✅ Timer bar untuk Tebak Arti -->
+        <div class="timer-bar">
+          <div class="timer-fill" [style.width.%]="vocabTimeLeft"></div>
+        </div>
+
         <div class="word-card">
           <h1 class="word-eng">{{ currentVocabQ.word }}</h1>
           <p class="word-phonetic">{{ currentVocabQ.phonetic }}</p>
@@ -126,9 +130,15 @@
           Salah. Jawaban: {{ correctAnswer }}
         </div>
 
-        <button class="primary-btn" *ngIf="vocabAnswered" (click)="nextVocabQuestion()">
+        <ion-button
+          *ngIf="vocabAnswered"
+          expand="block"
+          fill="solid"
+          color="light"
+          (click)="nextVocabQuestion()"
+          style="margin-top: 16px; --color: #1a73e8; font-weight: 600;">
           Soal Berikutnya →
-        </button>
+        </ion-button>
       </div>
     </ng-container>
 
@@ -170,6 +180,8 @@
           placeholder="Ketik jawabanmu..."
           autocomplete="off"
           autocorrect="off"
+          autocapitalize="characters"
+          spellcheck="false"
         ></ion-input>
 
         <div class="feedback correct" *ngIf="gameAnswered && gameCorrectThisRound">
@@ -179,9 +191,16 @@
           Jawaban: {{ currentGameQ.eng }}
         </div>
 
-        <button class="primary-btn game" *ngIf="gameAnswered" (click)="nextGameQuestion()">
+        <ion-button
+          *ngIf="gameAnswered"
+          expand="block"
+          fill="solid"
+          color="light"
+          (click)="nextGameQuestion()"
+          style="margin-top: 16px; --color: #1a73e8; font-weight: 600;">
           Soal Berikutnya →
-        </button>
+        </ion-button>
+
       </div>
     </ng-container>
 

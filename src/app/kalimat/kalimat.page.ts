@@ -33,7 +33,6 @@ export class KalimatPage implements OnInit {
   xp = 0;
   streak = 0;
 
-  // ─── DATA KALIMAT ──────────────────────────────────────────────
   private allSentences: DailySentence[] = [
     {
       english: 'I wake up early every morning.',
@@ -252,12 +251,10 @@ export class KalimatPage implements OnInit {
     },
   ];
 
-  // ─── STATE ─────────────────────────────────────────────────────
   todaySentences: DailySentence[] = [];
   selectedSentence: DailySentence | null = null;
   selectedIndex = 0;
 
-  // Quiz state
   quizSentence: DailySentence | null = null;
   quizWords: string[] = [];
   arrangedWords: string[] = [];
@@ -269,9 +266,12 @@ export class KalimatPage implements OnInit {
   quizIndex = 0;
   quizSentences: DailySentence[] = [];
 
-  // Result state
   resultCorrectCount = 0;
   resultXpGain = 0;
+
+  // ✅ Sound effect
+  private correctSound = new Audio('assets/sound/correct.wav');
+  private wrongSound   = new Audio('assets/sound/wrong.wav');
 
   constructor(private router: Router) {}
 
@@ -284,7 +284,13 @@ export class KalimatPage implements OnInit {
     this.loadState();
   }
 
-  // ─── Persistence ───────────────────────────────────────────────
+  private playSound(audio: HTMLAudioElement) {
+    try {
+      const clone = audio.cloneNode() as HTMLAudioElement;
+      clone.play().catch(() => {});
+    } catch (e) {}
+  }
+
   loadState() {
     this.xp     = Number(localStorage.getItem('eng_xp'))     || 0;
     this.streak = Number(localStorage.getItem('eng_streak')) || 0;
@@ -295,7 +301,6 @@ export class KalimatPage implements OnInit {
     localStorage.setItem('eng_streak', String(this.streak));
   }
 
-  // ─── Daily Rotation ────────────────────────────────────────────
   private getDayIndex(): number {
     return Math.floor(new Date().getTime() / (1000 * 60 * 60 * 24));
   }
@@ -321,7 +326,6 @@ export class KalimatPage implements OnInit {
     }
   }
 
-  // ─── Navigation ────────────────────────────────────────────────
   goBack() {
     if (this.currentScreen === 'detail') {
       this.currentScreen = 'list';
@@ -340,24 +344,22 @@ export class KalimatPage implements OnInit {
     this.currentScreen    = 'detail';
   }
 
-  // ─── Quiz Logic ────────────────────────────────────────────────
   startQuiz() {
-    this.quizSentences    = [...this.todaySentences];
-    this.quizIndex        = 0;
-    this.quizScore        = 0;
-    this.quizTotal        = 0;
+    this.quizSentences      = [...this.todaySentences];
+    this.quizIndex          = 0;
+    this.quizScore          = 0;
+    this.quizTotal          = 0;
     this.resultCorrectCount = 0;
     this.loadQuizQuestion();
     this.currentScreen = 'quiz';
   }
 
   loadQuizQuestion() {
-    this.quizSentence   = this.quizSentences[this.quizIndex];
-    this.arrangedWords  = [];
-    this.quizAnswered   = false;
-    this.quizCorrect    = false;
+    this.quizSentence  = this.quizSentences[this.quizIndex];
+    this.arrangedWords = [];
+    this.quizAnswered  = false;
+    this.quizCorrect   = false;
 
-    // Acak kata dari kalimat Inggris
     const words = this.quizSentence.english
       .replace(/[.,?!]/g, '')
       .split(' ')
@@ -397,6 +399,9 @@ export class KalimatPage implements OnInit {
     if (this.quizCorrect) {
       this.quizScore += 15;
       this.resultCorrectCount++;
+      this.playSound(this.correctSound); // ✅ sound benar
+    } else {
+      this.playSound(this.wrongSound); // ✅ sound salah
     }
   }
 
@@ -410,10 +415,10 @@ export class KalimatPage implements OnInit {
   }
 
   showResult() {
-    const xpGain    = this.quizScore + this.resultCorrectCount * 5;
+    const xpGain      = this.quizScore + this.resultCorrectCount * 5;
     this.resultXpGain = xpGain;
-    this.xp        += xpGain;
-    this.streak     = Math.min(this.streak + 1, 7);
+    this.xp          += xpGain;
+    this.streak       = Math.min(this.streak + 1, 7);
     this.saveState();
     this.currentScreen = 'result';
   }
