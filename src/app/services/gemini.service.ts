@@ -31,7 +31,7 @@ export class GeminiService {
 
   // ✅ Groq API — Free tier: 30 RPM, 14.400 RPD, tanpa billing
   // Daftar di: https://console.groq.com → Create API Key
-  private apiKey = 'REMOVED_API_KEY';
+  private apiKey = '';
   private apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
   private model  = 'llama-3.1-8b-instant';
 
